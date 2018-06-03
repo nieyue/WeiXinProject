@@ -1,6 +1,7 @@
 package com.nieyue.service.impl;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.ibatis.session.RowBounds;
@@ -81,13 +82,18 @@ public class BaseServiceImpl<T,ID> implements BaseService<T,ID>{
 		RowBounds rowBounds=new RowBounds(pageNum-1,pageSize);
 		//排序
 		if(wrapper==null){
-			wrapper=new EntityWrapper<>();
+			wrapper=new EntityWrapper<T>();
 		}
 		if(!StringUtils.isEmpty(orderName)&&!StringUtils.isEmpty(orderWay)){
+			//ArrayList<String> list = new ArrayList<String>();
+			//list.add(orderName);
 			if(orderWay.equals("asc")){
 				wrapper=wrapper.orderBy(orderName, true);
+				//wrapper=wrapper.orderAsc(list);
+				
 			}else if(orderWay.equals("desc")){
 				wrapper=wrapper.orderBy(orderName, false);
+				//wrapper=wrapper.orderDesc(list);
 			}
 		}
 		List<T> list = baseDao.selectPage(rowBounds, wrapper);
