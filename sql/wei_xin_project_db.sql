@@ -53,13 +53,44 @@ name varchar(255) COMMENT '公众号名称',
 appid varchar(255) COMMENT '公众号应用id',
 appsecret varchar(255) COMMENT '公众号秘钥',
 ghid varchar(255) COMMENT '公众号原始id',
-imgAddress varchar(255) COMMENT '公众号二维码',
+img_address varchar(255) COMMENT '公众号二维码',
 mchid varchar(255) COMMENT '公众号商户id',
-key varchar(255) COMMENT '公众号商户秘钥key',
+mchkey varchar(255) COMMENT '公众号商户秘钥key',
 update_date datetime COMMENT '更新时间',
+account_id int(11) COMMENT '账户id外键',
 PRIMARY KEY (subscription_id)
 )ENGINE = InnoDB AUTO_INCREMENT=1000 DEFAULT CHARSET=utf8 COMMENT='公众号表';
 
+#客服消息
+CREATE TABLE kf_message_tb(
+kf_message_id int(11) NOT NULL AUTO_INCREMENT COMMENT '客服消息id',
+msgtype varchar(255) COMMENT '消息类型，text文本消息，image图片消息，voice语音消息，video视频消息，music音乐消息，news图文消息（外链），mpnews图文消息（微信链接），wxcard发送卡券，miniprogrampage小程序',
+content longtext COMMENT '文本消息内容',
+media_id varchar(255) COMMENT '发送的图片/语音/视频/图文消息（点击跳转到图文消息页）的媒体ID',
+thumb_media_id varchar(255) COMMENT '缩略图/小程序卡片图片的媒体ID，小程序卡片图片建议大小为520*416',
+title varchar(255) COMMENT '视频消息/音乐消息/小程序卡片的标题',
+description varchar(255) COMMENT '视频消息/音乐消息的描述',
+musicurl varchar(255) COMMENT '音乐链接',
+hqmusicurl varchar(255) COMMENT '高品质音乐链接，wifi环境优先使用该链接播放音乐',
+card_id varchar(255) COMMENT '卡卷id',
+appid varchar(255) COMMENT '小程序的appid，要求小程序的appid需要与公众号有关联关系',
+pagepath varchar(255) COMMENT '小程序的页面路径，跟app.json对齐，支持参数，比如pages/index/index?foo=bar',
+update_date datetime COMMENT '更新时间',
+subscription_id int(11) COMMENT '公众号id外键',
+PRIMARY KEY (kf_message_id)
+)ENGINE = InnoDB AUTO_INCREMENT=1000 DEFAULT CHARSET=utf8 COMMENT='客服消息表';
+
+#客服消息文章
+CREATE TABLE kf_article_tb(
+kf_article_id int(11) NOT NULL AUTO_INCREMENT COMMENT '客服消息文章id',
+title varchar(255) COMMENT '图文消息的标题',
+description varchar(255) COMMENT '图文消息的描述',
+url varchar(255) COMMENT '图文消息被点击后跳转的链接',
+picurl varchar(255) COMMENT '图文消息的图片链接，支持JPG、PNG格式，较好的效果为大图640*320，小图80*80',
+update_date datetime COMMENT '更新时间',
+kf_message_id int(11) COMMENT '客服消息id外键',
+PRIMARY KEY (kf_article_id)
+)ENGINE = InnoDB AUTO_INCREMENT=1000 DEFAULT CHARSET=utf8 COMMENT='客服消息文章表';
 
 #设置初始角色
 INSERT IGNORE INTO role_tb (name,duty,update_date) 
