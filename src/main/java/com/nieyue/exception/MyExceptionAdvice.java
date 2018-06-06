@@ -2,6 +2,7 @@ package com.nieyue.exception;
 
 import java.lang.reflect.UndeclaredThrowableException;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.validation.BindException;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -21,6 +22,16 @@ import com.nieyue.util.StateResult;
 @RestControllerAdvice
 public class MyExceptionAdvice {
 	
+	@ExceptionHandler(value=Exception.class)
+	@ResponseBody
+	public StateResult jsonExceptionHandler( Exception e) throws Exception {
+		return ResultUtil.getFail();
+	}
+	@ExceptionHandler(value=DataAccessException.class)
+	@ResponseBody
+	public StateResult sqlExceptionHandler( ) throws Exception {
+		return ResultUtil.getSlefSR(10000, "数据库异常");
+	}
 	@ExceptionHandler(value=CommonRollbackException.class)
 	@ResponseBody
 	public StateResult commonRollbackExceptionHandler( CommonRollbackException e) throws Exception {
@@ -41,11 +52,6 @@ public class MyExceptionAdvice {
 	public StateResult notIsNotExistExceptionHandler( NotIsNotExistException e) throws Exception {
 		return ResultUtil.getSlefSR(30003, e.getTitle()+"不存在");
 	}
-	@ExceptionHandler(value=Exception.class)
-	@ResponseBody
-	public StateResult jsonExceptionHandler( Exception e) throws Exception {
-	       return ResultUtil.getFail();
-	    }
 	@ExceptionHandler(value=AccountIsExistException.class)
 	@ResponseBody
 	public StateResult accountIsExistExceptionHandler( Exception e) throws Exception {

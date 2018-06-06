@@ -144,6 +144,62 @@ PRIMARY KEY (template_data_id),
 INDEX INDEX_TEMPLATEMESSAGEID (template_message_id) USING BTREE
 )ENGINE = InnoDB  DEFAULT CHARSET=utf8 COMMENT='模板数据表';
 
+#创建签到表 
+CREATE TABLE sign_tb(
+sign_id bigint(20) NOT NULL AUTO_INCREMENT COMMENT '签到id',
+day_number int(11) DEFAULT 0 COMMENT '连续天数',
+integral decimal(11,2)  DEFAULT 0 COMMENT '总积分',
+create_date datetime COMMENT '创建时间',
+update_date datetime COMMENT '修改时间',
+account_id bigint(20) COMMENT '任务人id外键',
+PRIMARY KEY (sign_id),
+INDEX INDEX_ACOUNTID (acount_id) USING BTREE
+)ENGINE = InnoDB DEFAULT CHARSET=utf8 COMMENT='签到表';
+
+#创建签到记录表 
+CREATE TABLE sign_record_tb(
+sign_record_id bigint(20) NOT NULL AUTO_INCREMENT COMMENT '签到记录id',
+integral decimal(11,2) DEFAULT 0 COMMENT '奖励积分',
+sign_date datetime COMMENT '签到时间',
+account_id bigint(20) COMMENT '任务人id外键',
+PRIMARY KEY (sign_record_id),
+INDEX INDEX_ACOUNTID (acount_id) USING BTREE
+)ENGINE = InnoDB  DEFAULT CHARSET=utf8 COMMENT='签到记录表';
+
+#创建奖品表 
+CREATE TABLE prize_tb(
+prize_id bigint(20) NOT NULL AUTO_INCREMENT COMMENT '奖品id',
+day_number int(11) DEFAULT 0 COMMENT '连续天数',
+name varchar(255)  COMMENT '奖品名称',
+number int(11) DEFAULT 0 COMMENT '奖品数量',
+img_address varchar(255)  COMMENT '奖品图标',
+content longtext  COMMENT '奖品内容',
+create_date datetime COMMENT '创建时间',
+update_date datetime COMMENT '修改时间',
+PRIMARY KEY (prize_id),
+INDEX INDEX_DAYNUMBER (day_number) USING BTREE,
+INDEX INDEX_ACOUNTID (acount_id) USING BTREE
+)ENGINE = InnoDB  DEFAULT CHARSET=utf8 COMMENT='奖品表';
+
+#创建签到奖品表 
+CREATE TABLE sign_prize_tb(
+sign_prize_id bigint(20) NOT NULL AUTO_INCREMENT COMMENT '签到奖品id',
+day_number int(11) DEFAULT 0 COMMENT '连续天数',
+name varchar(255)  COMMENT '奖品名称',
+number int(11) DEFAULT 0 COMMENT '奖品数量',
+img_address varchar(255)  COMMENT '奖品图标',
+content longtext  COMMENT '奖品内容',
+prize_date datetime COMMENT '领奖时间',
+status  tinyint(4) COMMENT '状态，1申请领奖，2领取成功，3拒绝发送',
+prize_id bigint(20) COMMENT '奖品id外键',
+account_id bigint(20) COMMENT '领奖人id外键',
+PRIMARY KEY (sign_prize_id),
+INDEX INDEX_DAYNUMBER (day_number) USING BTREE,
+INDEX INDEX_STATUS (status) USING BTREE,
+INDEX INDEX_PRIZEID (prize_id) USING BTREE
+INDEX INDEX_ACOUNTID (acount_id) USING BTREE
+)ENGINE = InnoDB  DEFAULT CHARSET=utf8 COMMENT='签到奖品表';
+
 #设置初始角色
 INSERT IGNORE INTO role_tb (role_id,name,duty,update_date) 
 VALUES (1000,"超级管理员","超级管理员",now());
