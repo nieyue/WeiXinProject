@@ -3,6 +3,7 @@ package com.nieyue.bean;
 import java.io.Serializable;
 import java.util.Date;
 
+import com.baomidou.mybatisplus.annotations.TableField;
 import com.baomidou.mybatisplus.annotations.TableId;
 import com.baomidou.mybatisplus.annotations.TableName;
 
@@ -26,7 +27,7 @@ public class Account implements Serializable {
 	 */
 	@ApiModelProperty(value="账户id",example="账户id")
 	@TableId("account_id")
-	private Integer accountId;
+	private Long accountId;
 	/**
 	 * 注册手机号
 	 */
@@ -116,11 +117,18 @@ public class Account implements Serializable {
 	 * 角色id外键
 	 */
 	@ApiModelProperty(value="角色id外键",example="角色id外键")
-	private Integer roleId;
-	public Integer getAccountId() {
+	private Long roleId;
+	/**
+	 * 角色
+	 */
+	@ApiModelProperty(value="角色",example="角色")
+	@TableField(exist=false)
+	private  Role role;
+	
+	public Long getAccountId() {
 		return accountId;
 	}
-	public void setAccountId(Integer accountId) {
+	public void setAccountId(Long accountId) {
 		this.accountId = accountId;
 	}
 	public String getPhone() {
@@ -225,15 +233,20 @@ public class Account implements Serializable {
 	public void setStatus(Integer status) {
 		this.status = status;
 	}
-	public Integer getRoleId() {
+	public Long getRoleId() {
 		return roleId;
 	}
-	public void setRoleId(Integer roleId) {
+	public void setRoleId(Long roleId) {
 		this.roleId = roleId;
 	}
 	public static long getSerialversionuid() {
 		return serialVersionUID;
 	}
-	
+	public Role getRole() {
+		return role;
+	}
+	public void setRole(Role role) {
+		this.role = role;
+	}
 	
 }

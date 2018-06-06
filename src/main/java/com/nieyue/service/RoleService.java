@@ -7,5 +7,5 @@ import com.nieyue.bean.Role;
  * @author yy
  *
  */
-public interface RoleService extends BaseService<Role, Integer>{
+public interface RoleService extends BaseService<Role, Long>{
 }

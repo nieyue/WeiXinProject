@@ -27,7 +27,7 @@ public class Role implements Serializable{
      */
     @ApiModelProperty(value="角色id",example="角色id")
     @TableId("role_id")
-    private Integer roleId;
+    private Long roleId;
 
     /**
      * 角色名
@@ -45,20 +45,13 @@ public class Role implements Serializable{
     @ApiModelProperty(value="角色更新时间",example="角色更新时间")
     private Date updateDate;
 
-    public Role(Integer roleId, String name, String duty, Date updateDate) {
-        super();
-        this.roleId = roleId;
-        this.name = name;
-        this.duty = duty;
-        this.updateDate = updateDate;
-    }
     public Role() {
         super();
     }
-    public Integer getRoleId() {
+    public Long getRoleId() {
         return roleId;
     }
-    public void setRoleId(Integer roleId) {
+    public void setRoleId(Long roleId) {
         this.roleId = roleId;
     }
     public String getName() {

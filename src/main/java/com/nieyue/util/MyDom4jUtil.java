@@ -6,11 +6,13 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import org.springframework.util.StringUtils;
 
 /**
  * dom4j将xml字符串转换成Bean对象
@@ -18,6 +20,19 @@ import org.dom4j.Element;
  *
  */
 public class MyDom4jUtil {
+	/**
+	 * 过滤map中的空字段
+	 */
+	public static Map<String,Object> getNoNullMap(Map<String,Object> map){
+		Map<String,Object> newmap=new HashMap<>();
+		Set<Entry<String, Object>> set = map.entrySet();
+		for (Entry<String, Object> entry : set) {
+			if(!StringUtils.isEmpty(entry.getKey())&&!StringUtils.isEmpty(entry.getValue())){
+				newmap.put(entry.getKey(), entry.getValue());
+			}
+		}
+		return newmap;
+	}
 	/**
 	 * xml字符串转换成bean对象
 	 * 

@@ -1,7 +1,6 @@
 package com.nieyue.service.impl;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.ibatis.session.RowBounds;
@@ -46,7 +45,8 @@ public class BaseServiceImpl<T,ID> implements BaseService<T,ID>{
 	public boolean update(T t) {
 		boolean b=false;
 		Integer uid = baseDao.updateById(t);
-		//System.err.println("uid="+uid);
+		//Wrapper<T> w=new EntityWrapper<>();
+		//Integer uid = baseDao.update(t, wrapper);
 		if(uid>0){
 			b=true;
 		}

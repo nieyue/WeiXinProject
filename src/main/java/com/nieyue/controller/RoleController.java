@@ -1,5 +1,6 @@
 package com.nieyue.controller;
 
+import java.util.Date;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -30,7 +31,7 @@ import io.swagger.annotations.ApiOperation;
 @Api(tags={"role"},value="角色",description="角色管理")
 @RestController
 @RequestMapping("/role")
-public class RoleController extends BaseController<Role,Integer> {
+public class RoleController extends BaseController<Role,Long> {
 	@Resource
 	private RoleService roleService;
 	
@@ -63,6 +64,7 @@ public class RoleController extends BaseController<Role,Integer> {
 	@ApiOperation(value = "角色修改", notes = "角色修改")
 	@RequestMapping(value = "/update", method = {RequestMethod.GET,RequestMethod.POST})
 	public @ResponseBody StateResultList<List<Role>> update(@ModelAttribute Role role,HttpSession session)  {
+		role.setUpdateDate(new Date());
 		StateResultList<List<Role>> u = super.update(role);
 		return u;
 	}
@@ -73,6 +75,7 @@ public class RoleController extends BaseController<Role,Integer> {
 	@ApiOperation(value = "角色增加", notes = "角色增加")
 	@RequestMapping(value = "/add", method = {RequestMethod.GET,RequestMethod.POST})
 	public @ResponseBody StateResultList<List<Role>> add(@ModelAttribute Role role, HttpSession session) {
+		role.setUpdateDate(new Date());
 		StateResultList<List<Role>> a = super.add(role);
 		return a;
 	}
@@ -82,10 +85,10 @@ public class RoleController extends BaseController<Role,Integer> {
 	 */
 	@ApiOperation(value = "角色删除", notes = "角色删除")
 	@ApiImplicitParams({
-		  @ApiImplicitParam(name="roleId",value="角色ID",dataType="int", paramType = "query",required=true)
+		  @ApiImplicitParam(name="roleId",value="角色ID",dataType="long", paramType = "query",required=true)
 		  })
 	@RequestMapping(value = "/delete", method = {RequestMethod.GET,RequestMethod.POST})
-	public @ResponseBody StateResultList<List<Role>> delete(@RequestParam("roleId") Integer roleId,HttpSession session)  {
+	public @ResponseBody StateResultList<List<Role>> delete(@RequestParam("roleId") Long roleId,HttpSession session)  {
 		StateResultList<List<Role>> d = super.delete(roleId);
 		return d;
 	}
@@ -105,10 +108,10 @@ public class RoleController extends BaseController<Role,Integer> {
 	 */
 	@ApiOperation(value = "角色单个加载", notes = "角色单个加载")
 	@ApiImplicitParams({
-		  @ApiImplicitParam(name="roleId",value="角色ID",dataType="int", paramType = "query",required=true)
+		  @ApiImplicitParam(name="roleId",value="角色ID",dataType="long", paramType = "query",required=true)
 		  })
 	@RequestMapping(value = "/load", method = {RequestMethod.GET,RequestMethod.POST})
-	public  StateResultList<List<Role>> loadRole(@RequestParam("roleId") Integer roleId,HttpSession session)  {
+	public  StateResultList<List<Role>> loadRole(@RequestParam("roleId") Long roleId,HttpSession session)  {
 		 StateResultList<List<Role>> l = super.load(roleId);
 		 return l;
 	}
