@@ -15,7 +15,7 @@ import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.nieyue.dao.BaseDao;
 import com.nieyue.service.BaseService;
 @Service
-public class BaseServiceImpl<T,ID> implements BaseService<T,ID>{
+public  class BaseServiceImpl<T,ID> implements BaseService<T,ID>{
 	@Autowired
 	BaseDao<T> baseDao;
 	@Transactional(propagation=Propagation.REQUIRED)

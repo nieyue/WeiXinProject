@@ -153,7 +153,7 @@ create_date datetime COMMENT '创建时间',
 update_date datetime COMMENT '修改时间',
 account_id bigint(20) COMMENT '任务人id外键',
 PRIMARY KEY (sign_id),
-INDEX INDEX_ACOUNTID (acount_id) USING BTREE
+INDEX INDEX_ACCOUNTID (account_id) USING BTREE
 )ENGINE = InnoDB DEFAULT CHARSET=utf8 COMMENT='签到表';
 
 #创建签到记录表 
@@ -163,7 +163,7 @@ integral decimal(11,2) DEFAULT 0 COMMENT '奖励积分',
 sign_date datetime COMMENT '签到时间',
 account_id bigint(20) COMMENT '任务人id外键',
 PRIMARY KEY (sign_record_id),
-INDEX INDEX_ACOUNTID (acount_id) USING BTREE
+INDEX INDEX_ACCOUNTID (account_id) USING BTREE
 )ENGINE = InnoDB  DEFAULT CHARSET=utf8 COMMENT='签到记录表';
 
 #创建奖品表 
@@ -177,8 +177,7 @@ content longtext  COMMENT '奖品内容',
 create_date datetime COMMENT '创建时间',
 update_date datetime COMMENT '修改时间',
 PRIMARY KEY (prize_id),
-INDEX INDEX_DAYNUMBER (day_number) USING BTREE,
-INDEX INDEX_ACOUNTID (acount_id) USING BTREE
+INDEX INDEX_DAYNUMBER (day_number) USING BTREE
 )ENGINE = InnoDB  DEFAULT CHARSET=utf8 COMMENT='奖品表';
 
 #创建签到奖品表 
@@ -196,8 +195,8 @@ account_id bigint(20) COMMENT '领奖人id外键',
 PRIMARY KEY (sign_prize_id),
 INDEX INDEX_DAYNUMBER (day_number) USING BTREE,
 INDEX INDEX_STATUS (status) USING BTREE,
-INDEX INDEX_PRIZEID (prize_id) USING BTREE
-INDEX INDEX_ACOUNTID (acount_id) USING BTREE
+INDEX INDEX_PRIZEID (prize_id) USING BTREE,
+INDEX INDEX_ACCOUNTID (account_id) USING BTREE
 )ENGINE = InnoDB  DEFAULT CHARSET=utf8 COMMENT='签到奖品表';
 
 #设置初始角色

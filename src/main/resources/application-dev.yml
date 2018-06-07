@@ -15,11 +15,11 @@ server:
  
 spring:
    datasource: 
-     name: master
-     driver-class-name: com.mysql.jdbc.Driver
-     url: jdbc:mysql://127.0.0.1:3306/wei_xin_project_db
-     username: root
-     password: liliu 
+    name: master
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/wei_xin_project_db
+    username: root
+    password: liliu 
 myPugin: 
   session: 
     myDomainName: null

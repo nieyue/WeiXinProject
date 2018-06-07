@@ -49,10 +49,16 @@ mybatis-plus:
     cache-enabled: false
     #配置JdbcTypeForNull, oracle数据库必须配置
     jdbc-type-for-null: 'null'    
-    
-spring:
-  http:
-    multipart:
+
+uploaderPath:  
+  rootPath: D:/nieyue
+  #rootPath: /home
+  locationPath: /uploaderPath/img    
+spring: 
+  resources: 
+    static-locations:  file:${uploaderPath.rootPath}/, classpath:/META-INF/resources/, classpath:/resources/, classpath:/static/, classpath:/public/        
+  http: 
+    multipart: 
       max-file-size: 30MB
       max-request-size: 30MB
   mvc:
@@ -64,8 +70,7 @@ spring:
     generator:
       write-numbers-as-strings: true
   session:
-    store-type: none      
-  profiles:
+    store-type: none 
+  profiles: 
     active: dev
     #active: prod
-
