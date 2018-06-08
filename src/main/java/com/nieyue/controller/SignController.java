@@ -18,8 +18,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.nieyue.bean.Sign;
+import com.nieyue.service.SignRecordService;
 import com.nieyue.service.SignService;
+import com.nieyue.service.ThirdInfoService;
 import com.nieyue.util.MyDom4jUtil;
+import com.nieyue.util.ResultUtil;
 import com.nieyue.util.StateResultList;
 
 import io.swagger.annotations.Api;
@@ -39,6 +42,10 @@ import io.swagger.annotations.ApiOperation;
 public class SignController extends BaseController<Sign,Long> {
 	@Resource
 	private SignService signService;
+	@Resource
+	private ThirdInfoService thirdInfoService;
+	@Resource
+	private SignRecordService signRecordService;
 	
 	/**
 	 * 签到分页浏览
@@ -48,6 +55,7 @@ public class SignController extends BaseController<Sign,Long> {
 	 */
 	@ApiOperation(value = "签到列表", notes = "签到分页浏览")
 	@ApiImplicitParams({
+		@ApiImplicitParam(name="subscriptionId",value="公众号id",dataType="long", paramType = "query"),
 		@ApiImplicitParam(name="accountId",value="账户id",dataType="long", paramType = "query"),
 		@ApiImplicitParam(name="pageNum",value="页头数位",dataType="int", paramType = "query",defaultValue="1"),
 		@ApiImplicitParam(name="pageSize",value="每页数目",dataType="int", paramType = "query",defaultValue="10"),
@@ -56,6 +64,7 @@ public class SignController extends BaseController<Sign,Long> {
 	  })
 	@RequestMapping(value = "/list", method = {RequestMethod.GET,RequestMethod.POST})
 	public @ResponseBody StateResultList<List<Sign>> list(
+			@RequestParam(value="subscriptionId",required=false)Long subscriptionId,
 			@RequestParam(value="accountId",required=false)Long accountId,
 			@RequestParam(value="pageNum",defaultValue="1",required=false)int pageNum,
 			@RequestParam(value="pageSize",defaultValue="10",required=false) int pageSize,
@@ -63,6 +72,7 @@ public class SignController extends BaseController<Sign,Long> {
 			@RequestParam(value="orderWay",required=false,defaultValue="desc") String orderWay)  {
 		Wrapper<Sign> wrapper=new EntityWrapper<Sign>();
 	 	Map<String,Object> map=new HashMap<String,Object>();
+	 	map.put("subscription_id", subscriptionId);
 	 	map.put("account_id", accountId);
 	 	wrapper.allEq(MyDom4jUtil.getNoNullMap(map));
 		StateResultList<List<Sign>> rl = super.list(pageNum, pageSize, orderName, orderWay,wrapper);
@@ -110,14 +120,17 @@ public class SignController extends BaseController<Sign,Long> {
 	 */
 	@ApiOperation(value = "签到数量", notes = "签到数量查询")
 	@ApiImplicitParams({
+		@ApiImplicitParam(name="subscriptionId",value="公众号id",dataType="long", paramType = "query"),
 		@ApiImplicitParam(name="accountId",value="账户id",dataType="long", paramType = "query"),
 	  })
 	@RequestMapping(value = "/count", method = {RequestMethod.GET,RequestMethod.POST})
 	public @ResponseBody StateResultList<List<Integer>> count(
+			@RequestParam(value="subscriptionId",required=false)Long subscriptionId,
 			@RequestParam(value="accountId",required=false)Long accountId,
 			HttpSession session)  {
 		Wrapper<Sign> wrapper=new EntityWrapper<Sign>();
 	 	Map<String,Object> map=new HashMap<String,Object>();
+	 	map.put("subscription_id", subscriptionId);
 	 	map.put("account_id", accountId);
 	 	wrapper.allEq(MyDom4jUtil.getNoNullMap(map));
 		StateResultList<List<Integer>> c = super.count(wrapper);
@@ -135,6 +148,30 @@ public class SignController extends BaseController<Sign,Long> {
 	public  StateResultList<List<Sign>> loadSign(@RequestParam("signId") Long signId,HttpSession session)  {
 		 StateResultList<List<Sign>> l = super.load(signId);
 		 return l;
+	}
+	/**
+	 * 签到
+	 * @return
+	 */
+	@ApiOperation(value = "签到单个加载", notes = "签到单个加载")
+	@ApiImplicitParams({
+		@ApiImplicitParam(name="subscriptionId",value="公众号ID",dataType="long", paramType = "query",required=true),
+		@ApiImplicitParam(name="accountId",value="账户ID",dataType="long", paramType = "query"),
+		@ApiImplicitParam(name="wxOpenid",value="账户ID",dataType="string", paramType = "query"),
+		@ApiImplicitParam(name="wxUuid",value="账户ID",dataType="string", paramType = "query")
+	})
+	@RequestMapping(value = "/sign", method = {RequestMethod.GET,RequestMethod.POST})
+	public  StateResultList<List<Sign>> signSign(
+			@RequestParam(value="subscriptionId") Long subscriptionId,
+			@RequestParam(value="accountId",required=false) Long accountId,
+			@RequestParam(value="wxOpenid",required=false) String wxOpenid,
+			@RequestParam(value="wxUuid",required=false) String wxUuid,
+			HttpSession session)  {
+		List<Sign> list = signService.signSign(subscriptionId, accountId, wxOpenid, wxUuid);
+		if(list.size()>0){
+			return ResultUtil.getSlefSRSuccessList(list);
+		}
+		return ResultUtil.getSlefSRFailList(list);
 	}
 	
 }

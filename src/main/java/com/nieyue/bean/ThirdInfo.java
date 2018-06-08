@@ -30,9 +30,9 @@ public class ThirdInfo implements Serializable{
     private Long thirdInfoId;
 
     /**
-     * 微信openid
+     * 微信openid，多个，格式[{subscriptionId:'1004908098840150018',openid:'sdfsdfdsf2fd'}]
      */
-    @ApiModelProperty(value="微信openid",example="微信openid")
+    @ApiModelProperty(value="微信openid，多个，格式[{subscriptionId:'1004908098840150018',openid:'sdfsdfdsf2fd'}]",example="微信openid，多个，格式[{subscriptionId:'1004908098840150018',openid:'sdfsdfdsf2fd'}]")
     private String wxOpenid;
     /**
      * 微信uuid

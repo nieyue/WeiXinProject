@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.nieyue.bean.Prize;
+import com.nieyue.exception.CommonRollbackException;
 import com.nieyue.service.PrizeService;
 import com.nieyue.util.MyDom4jUtil;
 import com.nieyue.util.StateResultList;
@@ -75,6 +76,17 @@ public class PrizeController extends BaseController<Prize,Long> {
 	@ApiOperation(value = "奖品修改", notes = "奖品修改")
 	@RequestMapping(value = "/update", method = {RequestMethod.GET,RequestMethod.POST})
 	public @ResponseBody StateResultList<List<Prize>> update(@ModelAttribute Prize prize,HttpSession session)  {
+		Wrapper<Prize> wrapper=new EntityWrapper<Prize>();
+	 	Map<String,Object> map=new HashMap<String,Object>();
+	 	map.put("day_number", prize.getDayNumber());
+	 	wrapper.allEq(MyDom4jUtil.getNoNullMap(map));
+		List<Prize> islist = prizeService.list(1, 1, null, null, wrapper);
+		if(islist.size()>0){
+			if(!islist.get(0).getPrizeId().equals(prize.getPrizeId())){
+			//存在且不是本身，抛异常
+			throw new CommonRollbackException("连续天数以及存在");
+			}
+		}
 		prize.setUpdateDate(new Date());
 		StateResultList<List<Prize>> u = super.update(prize);
 		return u;
@@ -86,6 +98,17 @@ public class PrizeController extends BaseController<Prize,Long> {
 	@ApiOperation(value = "奖品增加", notes = "奖品增加")
 	@RequestMapping(value = "/add", method = {RequestMethod.GET,RequestMethod.POST})
 	public @ResponseBody StateResultList<List<Prize>> add(@ModelAttribute Prize prize, HttpSession session) {
+		Wrapper<Prize> wrapper=new EntityWrapper<Prize>();
+	 	Map<String,Object> map=new HashMap<String,Object>();
+	 	map.put("day_number", prize.getDayNumber());
+	 	wrapper.allEq(MyDom4jUtil.getNoNullMap(map));
+		List<Prize> islist = prizeService.list(1, 1, null, null, wrapper);
+		if(islist.size()>0){
+			if(!islist.get(0).getPrizeId().equals(prize.getPrizeId())){
+				//存在且不是本身，抛异常
+				throw new CommonRollbackException("连续天数以及存在");
+				}
+		}
 		prize.setCreateDate(new Date());
 		prize.setUpdateDate(new Date());
 		StateResultList<List<Prize>> a = super.add(prize);

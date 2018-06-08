@@ -48,6 +48,7 @@ public class SignRecordController extends BaseController<SignRecord,Long> {
 	 */
 	@ApiOperation(value = "签到记录列表", notes = "签到记录分页浏览")
 	@ApiImplicitParams({
+		@ApiImplicitParam(name="subscriptionId",value="公众号id",dataType="long", paramType = "query"),
 		@ApiImplicitParam(name="accountId",value="账户id",dataType="long", paramType = "query"),
 		@ApiImplicitParam(name="pageNum",value="页头数位",dataType="int", paramType = "query",defaultValue="1"),
 		@ApiImplicitParam(name="pageSize",value="每页数目",dataType="int", paramType = "query",defaultValue="10"),
@@ -56,6 +57,7 @@ public class SignRecordController extends BaseController<SignRecord,Long> {
 	  })
 	@RequestMapping(value = "/list", method = {RequestMethod.GET,RequestMethod.POST})
 	public @ResponseBody StateResultList<List<SignRecord>> list(
+			@RequestParam(value="subscriptionId",required=false)Long subscriptionId,
 			@RequestParam(value="accountId",required=false)Long accountId,
 			@RequestParam(value="pageNum",defaultValue="1",required=false)int pageNum,
 			@RequestParam(value="pageSize",defaultValue="10",required=false) int pageSize,
@@ -63,6 +65,7 @@ public class SignRecordController extends BaseController<SignRecord,Long> {
 			@RequestParam(value="orderWay",required=false,defaultValue="desc") String orderWay)  {
 		Wrapper<SignRecord> wrapper=new EntityWrapper<SignRecord>();
 	 	Map<String,Object> map=new HashMap<String,Object>();
+	 	map.put("subscription_id", subscriptionId);
 	 	map.put("account_id", accountId);
 	 	wrapper.allEq(MyDom4jUtil.getNoNullMap(map));
 		StateResultList<List<SignRecord>> rl = super.list(pageNum, pageSize, orderName, orderWay,wrapper);
@@ -108,14 +111,17 @@ public class SignRecordController extends BaseController<SignRecord,Long> {
 	 */
 	@ApiOperation(value = "签到记录数量", notes = "签到记录数量查询")
 	@ApiImplicitParams({
+		@ApiImplicitParam(name="subscriptionId",value="公众号id",dataType="long", paramType = "query"),
 		@ApiImplicitParam(name="accountId",value="账户id",dataType="long", paramType = "query"),
 	  })
 	@RequestMapping(value = "/count", method = {RequestMethod.GET,RequestMethod.POST})
 	public @ResponseBody StateResultList<List<Integer>> count(
+			@RequestParam(value="subscriptionId",required=false)Long subscriptionId,
 			@RequestParam(value="accountId",required=false)Long accountId,
 			HttpSession session)  {
 		Wrapper<SignRecord> wrapper=new EntityWrapper<SignRecord>();
 	 	Map<String,Object> map=new HashMap<String,Object>();
+	 	map.put("subscription_id", subscriptionId);
 	 	map.put("account_id", accountId);
 	 	wrapper.allEq(MyDom4jUtil.getNoNullMap(map));
 		StateResultList<List<Integer>> c = super.count(wrapper);

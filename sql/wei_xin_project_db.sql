@@ -49,7 +49,7 @@ INDEX INDEX_STATUS (status) USING BTREE
 #创建第三方信息表
 CREATE TABLE third_info_tb(
 third_info_id bigint(20) NOT NULL  COMMENT '第三方信息id',
-wx_openid varchar(255) COMMENT '微信openid',
+wx_openid varchar(255) COMMENT '微信openid，多个，格式[{subscriptionId:'1004908098840150018',openid:'sdfsdfdsf2fd'}]',
 wx_uuid varchar(255) COMMENT '微信uuid',
 wechat varchar(255) COMMENT '微信号',
 qq varchar(255) COMMENT 'qq号',
@@ -151,8 +151,10 @@ day_number int(11) DEFAULT 0 COMMENT '连续天数',
 integral decimal(11,2)  DEFAULT 0 COMMENT '总积分',
 create_date datetime COMMENT '创建时间',
 update_date datetime COMMENT '修改时间',
+subscription_id bigint(20) COMMENT '公众号id外键',
 account_id bigint(20) COMMENT '任务人id外键',
 PRIMARY KEY (sign_id),
+INDEX INDEX_SUBSCRIPTIONID (subscription_id) USING BTREE,
 INDEX INDEX_ACCOUNTID (account_id) USING BTREE
 )ENGINE = InnoDB DEFAULT CHARSET=utf8 COMMENT='签到表';
 
@@ -161,8 +163,10 @@ CREATE TABLE sign_record_tb(
 sign_record_id bigint(20) NOT NULL AUTO_INCREMENT COMMENT '签到记录id',
 integral decimal(11,2) DEFAULT 0 COMMENT '奖励积分',
 sign_date datetime COMMENT '签到时间',
+subscription_id bigint(20) COMMENT '公众号id外键',
 account_id bigint(20) COMMENT '任务人id外键',
 PRIMARY KEY (sign_record_id),
+INDEX INDEX_SUBSCRIPTIONID (subscription_id) USING BTREE,
 INDEX INDEX_ACCOUNTID (account_id) USING BTREE
 )ENGINE = InnoDB  DEFAULT CHARSET=utf8 COMMENT='签到记录表';
 
@@ -189,12 +193,14 @@ number int(11) DEFAULT 0 COMMENT '奖品数量',
 img_address varchar(255)  COMMENT '奖品图标',
 content longtext  COMMENT '奖品内容',
 prize_date datetime COMMENT '领奖时间',
-status  tinyint(4) COMMENT '状态，1申请领奖，2领取成功，3拒绝发送',
+status  tinyint(4) COMMENT '状态，1待申请，2申请领奖，3领取成功，4拒绝发送',
+subscription_id bigint(20) COMMENT '公众号id外键',
 prize_id bigint(20) COMMENT '奖品id外键',
 account_id bigint(20) COMMENT '领奖人id外键',
 PRIMARY KEY (sign_prize_id),
 INDEX INDEX_DAYNUMBER (day_number) USING BTREE,
 INDEX INDEX_STATUS (status) USING BTREE,
+INDEX INDEX_SUBSCRIPTIONID (subscription_id) USING BTREE,
 INDEX INDEX_PRIZEID (prize_id) USING BTREE,
 INDEX INDEX_ACCOUNTID (account_id) USING BTREE
 )ENGINE = InnoDB  DEFAULT CHARSET=utf8 COMMENT='签到奖品表';

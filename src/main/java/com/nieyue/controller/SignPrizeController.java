@@ -49,28 +49,31 @@ public class SignPrizeController extends BaseController<SignPrize,Long> {
 	@ApiOperation(value = "签到奖品列表", notes = "签到奖品分页浏览")
 	@ApiImplicitParams({
 		@ApiImplicitParam(name="dayNumber",value="连续天数",dataType="long", paramType = "query"),
-		@ApiImplicitParam(name="status",value="状态，1申请领奖，2领取成功，3拒绝发送",dataType="int", paramType = "query"),
+		@ApiImplicitParam(name="status",value="状态，1待申请，2申请领奖，3领取成功，4拒绝发送",dataType="int", paramType = "query"),
+		@ApiImplicitParam(name="subscriptionId",value="公众号id",dataType="long", paramType = "query"),
 		@ApiImplicitParam(name="prizeId",value="奖品id",dataType="long", paramType = "query"),
 		@ApiImplicitParam(name="accountId",value="账户id",dataType="long", paramType = "query"),
 		@ApiImplicitParam(name="pageNum",value="页头数位",dataType="int", paramType = "query",defaultValue="1"),
 		@ApiImplicitParam(name="pageSize",value="每页数目",dataType="int", paramType = "query",defaultValue="10"),
-		@ApiImplicitParam(name="orderName",value="排序字段",dataType="string", paramType = "query",defaultValue="signDate"),
+		@ApiImplicitParam(name="orderName",value="排序字段",dataType="string", paramType = "query",defaultValue="prizeDate"),
 		@ApiImplicitParam(name="orderWay",value="排序方式",dataType="string", paramType = "query",defaultValue="desc")
 	  })
 	@RequestMapping(value = "/list", method = {RequestMethod.GET,RequestMethod.POST})
 	public @ResponseBody StateResultList<List<SignPrize>> list(
 			@RequestParam(value="dayNumber",required=false)Long dayNumber,
 			@RequestParam(value="status",required=false)Integer status,
+			@RequestParam(value="subscriptionId",required=false)Long subscriptionId,
 			@RequestParam(value="prizeId",required=false)Long prizeId,
 			@RequestParam(value="accountId",required=false)Long accountId,
 			@RequestParam(value="pageNum",defaultValue="1",required=false)int pageNum,
 			@RequestParam(value="pageSize",defaultValue="10",required=false) int pageSize,
-			@RequestParam(value="orderName",required=false,defaultValue="signDate") String orderName,
+			@RequestParam(value="orderName",required=false,defaultValue="prizeDate") String orderName,
 			@RequestParam(value="orderWay",required=false,defaultValue="desc") String orderWay)  {
 		Wrapper<SignPrize> wrapper=new EntityWrapper<SignPrize>();
 	 	Map<String,Object> map=new HashMap<String,Object>();
 	 	map.put("day_number", dayNumber);
 	 	map.put("status", status);
+	 	map.put("subscription_id", subscriptionId);
 	 	map.put("prize_id", prizeId);
 	 	map.put("account_id", accountId);
 	 	wrapper.allEq(MyDom4jUtil.getNoNullMap(map));
@@ -118,7 +121,8 @@ public class SignPrizeController extends BaseController<SignPrize,Long> {
 	@ApiOperation(value = "签到奖品数量", notes = "签到奖品数量查询")
 	@ApiImplicitParams({
 		@ApiImplicitParam(name="dayNumber",value="连续天数",dataType="long", paramType = "query"),
-		@ApiImplicitParam(name="status",value="状态，1申请领奖，2领取成功，3拒绝发送",dataType="int", paramType = "query"),
+		@ApiImplicitParam(name="status",value="状态，1待申请，2申请领奖，3领取成功，4拒绝发送",dataType="int", paramType = "query"),
+		@ApiImplicitParam(name="subscriptionId",value="公众号id",dataType="long", paramType = "query"),
 		@ApiImplicitParam(name="prizeId",value="奖品id",dataType="long", paramType = "query"),
 		@ApiImplicitParam(name="accountId",value="账户id",dataType="long", paramType = "query"),
 	  })
@@ -126,6 +130,7 @@ public class SignPrizeController extends BaseController<SignPrize,Long> {
 	public @ResponseBody StateResultList<List<Integer>> count(
 			@RequestParam(value="dayNumber",required=false)Long dayNumber,
 			@RequestParam(value="status",required=false)Integer status,
+			@RequestParam(value="subscriptionId",required=false)Long subscriptionId,
 			@RequestParam(value="prizeId",required=false)Long prizeId,
 			@RequestParam(value="accountId",required=false)Long accountId,
 			HttpSession session)  {
@@ -133,6 +138,7 @@ public class SignPrizeController extends BaseController<SignPrize,Long> {
 	 	Map<String,Object> map=new HashMap<String,Object>();
 	 	map.put("day_number", dayNumber);
 	 	map.put("status", status);
+	 	map.put("subscription_id", subscriptionId);
 	 	map.put("prize_id", prizeId);
 	 	map.put("account_id", accountId);
 	 	wrapper.allEq(MyDom4jUtil.getNoNullMap(map));

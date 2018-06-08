@@ -8,15 +8,19 @@ import java.util.Map;
 import org.apache.ibatis.session.RowBounds;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.nieyue.bean.Account;
 import com.nieyue.bean.Role;
+import com.nieyue.bean.ThirdInfo;
 import com.nieyue.dao.AccountDao;
 import com.nieyue.dao.RoleDao;
 import com.nieyue.service.AccountService;
+import com.nieyue.service.ThirdInfoService;
 import com.nieyue.util.MyDESutil;
 import com.nieyue.util.MyDom4jUtil;
 @Service
@@ -25,6 +29,8 @@ public class AccountServiceImpl extends BaseServiceImpl<Account,Long> implements
 	AccountDao accountDao;
 	@Autowired
 	RoleDao roleDao;
+	@Autowired
+	ThirdInfoService thirdInfoService;
 	/**
 	 * 登录
 	 */
@@ -52,7 +58,17 @@ public class AccountServiceImpl extends BaseServiceImpl<Account,Long> implements
 	 	}
 	 	return account;
 	}
-	
+	@Transactional(propagation=Propagation.REQUIRED)
+	@Override
+	public boolean add(Account t) {
+		boolean b = super.add(t);
+		ThirdInfo ti=new ThirdInfo();
+		ti.setAccountId(t.getAccountId());
+		ti.setCreateDate(new Date());
+		ti.setUpdateDate(new Date());
+		b=thirdInfoService.add(ti);
+		return b;
+	}
 	@Override
 	public List<Account> list(int pageNum, int pageSize, String orderName, String orderWay, Wrapper<Account> wrapper) {
 				//分页
