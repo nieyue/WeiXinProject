@@ -60,9 +60,9 @@ public class SignPrize implements Serializable{
     @ApiModelProperty(value="领奖时间",example="领奖时间")
     private Date prizeDate;
     /**
-     * 状态，1申请领奖，2领取成功，3拒绝发送
+     * 状态，1待领取，2已申请，3领取成功，4拒绝发送
      */
-    @ApiModelProperty(value="状态，1申请领奖，2领取成功，3拒绝发送",example="状态，1申请领奖，2领取成功，3拒绝发送")
+    @ApiModelProperty(value="状态，1待领取，2已申请，3领取成功，4拒绝发送",example="状态，1待领取，2已申请，3领取成功，4拒绝发送")
     private Integer status;
     /**
      * 奖品id外键

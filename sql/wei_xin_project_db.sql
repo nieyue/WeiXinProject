@@ -220,3 +220,6 @@ VALUES (1004,"用户","用户",now());
 #设置初始管理员密码MD5加密123456
 INSERT IGNORE INTO account_tb (account_id,nickname,phone,email,password,create_date,login_date,role_id) 
 VALUES (1000,"聂跃","15111336587","278076304@qq.com","11874bb6149dd45428da628c9766b252",now(),now(),1000); 
+
+INSERT IGNORE INTO third_info_tb (third_info_id,create_date,update_date,account_id) 
+VALUES (1000,now(),now(),1000); 

@@ -1,5 +1,6 @@
 package com.nieyue.controller;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -18,8 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.nieyue.bean.SignPrize;
+import com.nieyue.exception.CommonRollbackException;
 import com.nieyue.service.SignPrizeService;
 import com.nieyue.util.MyDom4jUtil;
+import com.nieyue.util.ResultUtil;
 import com.nieyue.util.StateResultList;
 
 import io.swagger.annotations.Api;
@@ -49,7 +52,7 @@ public class SignPrizeController extends BaseController<SignPrize,Long> {
 	@ApiOperation(value = "签到奖品列表", notes = "签到奖品分页浏览")
 	@ApiImplicitParams({
 		@ApiImplicitParam(name="dayNumber",value="连续天数",dataType="long", paramType = "query"),
-		@ApiImplicitParam(name="status",value="状态，1待申请，2申请领奖，3领取成功，4拒绝发送",dataType="int", paramType = "query"),
+		@ApiImplicitParam(name="status",value="状态，1待领取，2已申请，3领取成功，4拒绝发送",dataType="int", paramType = "query"),
 		@ApiImplicitParam(name="subscriptionId",value="公众号id",dataType="long", paramType = "query"),
 		@ApiImplicitParam(name="prizeId",value="奖品id",dataType="long", paramType = "query"),
 		@ApiImplicitParam(name="accountId",value="账户id",dataType="long", paramType = "query"),
@@ -121,7 +124,7 @@ public class SignPrizeController extends BaseController<SignPrize,Long> {
 	@ApiOperation(value = "签到奖品数量", notes = "签到奖品数量查询")
 	@ApiImplicitParams({
 		@ApiImplicitParam(name="dayNumber",value="连续天数",dataType="long", paramType = "query"),
-		@ApiImplicitParam(name="status",value="状态，1待申请，2申请领奖，3领取成功，4拒绝发送",dataType="int", paramType = "query"),
+		@ApiImplicitParam(name="status",value="状态，1待领取，2已申请，3领取成功，4拒绝发送",dataType="int", paramType = "query"),
 		@ApiImplicitParam(name="subscriptionId",value="公众号id",dataType="long", paramType = "query"),
 		@ApiImplicitParam(name="prizeId",value="奖品id",dataType="long", paramType = "query"),
 		@ApiImplicitParam(name="accountId",value="账户id",dataType="long", paramType = "query"),
@@ -157,6 +160,41 @@ public class SignPrizeController extends BaseController<SignPrize,Long> {
 	public StateResultList<List<SignPrize>> loadSignPrize(@RequestParam("signPrizeId") Long signPrizeId,HttpSession session)  {
 		 StateResultList<List<SignPrize>> l = super.load(signPrizeId);
 		 return l;
+	}
+	/**
+	 * 签到奖品申请领取
+	 * @return
+	 */
+	@ApiOperation(value = "签到奖品申请领取", notes = "签到奖品申请领取")
+	@ApiImplicitParams({
+		@ApiImplicitParam(name="signPrizeId",value="签到奖品ID",dataType="long", paramType = "query",required=true)
+	})
+	@RequestMapping(value = "/apply", method = {RequestMethod.GET,RequestMethod.POST})
+	public StateResultList<List<SignPrize>> applySignPrize(@RequestParam("signPrizeId") Long signPrizeId,HttpSession session)  {
+		SignPrize signPrize = signPrizeService.load(signPrizeId);
+		if(signPrize==null){
+			throw new CommonRollbackException("签到奖品不存在");	
+		}
+		if(signPrize.getStatus()==1){
+			signPrize.setStatus(2);//已申请，转入审核
+			boolean b = signPrizeService.update(signPrize);
+			if(b){
+				List<SignPrize> list=new ArrayList<>();
+				list.add(signPrize);
+				return ResultUtil.getSlefSRSuccessList(list);
+			}
+		}
+		
+		if(signPrize.getStatus()==2){
+			throw new CommonRollbackException("已经申请，请等待审核");
+		}else if(signPrize.getStatus()==3){
+			throw new CommonRollbackException("已经领取过了");
+		}else if(signPrize.getStatus()==4){
+			throw new CommonRollbackException("该奖励已拒绝，如有问题请咨询客服");
+		}else{
+			throw new CommonRollbackException("服务异常");			
+		}
+		
 	}
 	
 }
