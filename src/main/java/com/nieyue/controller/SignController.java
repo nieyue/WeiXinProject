@@ -157,8 +157,8 @@ public class SignController extends BaseController<Sign,Long> {
 	@ApiImplicitParams({
 		@ApiImplicitParam(name="subscriptionId",value="公众号ID",dataType="long", paramType = "query",required=true),
 		@ApiImplicitParam(name="accountId",value="账户ID",dataType="long", paramType = "query"),
-		@ApiImplicitParam(name="wxOpenid",value="账户ID",dataType="string", paramType = "query"),
-		@ApiImplicitParam(name="wxUuid",value="账户ID",dataType="string", paramType = "query")
+		@ApiImplicitParam(name="wxOpenid",value="微信openid",dataType="string", paramType = "query"),
+		@ApiImplicitParam(name="wxUuid",value="微信uuid",dataType="string", paramType = "query")
 	})
 	@RequestMapping(value = "/sign", method = {RequestMethod.GET,RequestMethod.POST})
 	public  StateResultList<List<Sign>> signSign(

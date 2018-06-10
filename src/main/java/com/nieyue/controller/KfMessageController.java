@@ -20,6 +20,7 @@ import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.nieyue.bean.KfMessage;
 import com.nieyue.service.KfMessageService;
 import com.nieyue.util.MyDom4jUtil;
+import com.nieyue.util.ResultUtil;
 import com.nieyue.util.StateResultList;
 
 import io.swagger.annotations.Api;
@@ -141,6 +142,22 @@ public class KfMessageController extends BaseController<KfMessage,Long> {
 	public  StateResultList<List<KfMessage>> loadKfMessage(@RequestParam("kfMessageId") Long kfMessageId,HttpSession session)  {
 		 StateResultList<List<KfMessage>> l = super.load(kfMessageId);
 		 return l;
+	}
+	/**
+	 * 客服消息群发
+	 * @return
+	 */
+	@ApiOperation(value = "客服消息群发", notes = "客服消息群发")
+	@ApiImplicitParams({
+		@ApiImplicitParam(name="KfMessageId",value="客服消息ID",dataType="long", paramType = "query",required=true)
+	})
+	@RequestMapping(value = "/sendKfMessage", method = {RequestMethod.GET,RequestMethod.POST})
+	public  StateResultList<List<KfMessage>> sendKfMessage(@RequestParam("kfMessageId") Long kfMessageId,HttpSession session)  {
+		List<KfMessage> list = kfMessageService.sendKfMessage(kfMessageId);
+		if(list.size()>0){
+			return ResultUtil.getSlefSRSuccessList(list);
+		}
+		return ResultUtil.getSlefSRFailList(list);
 	}
 	
 }

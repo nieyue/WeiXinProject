@@ -49,7 +49,7 @@ INDEX INDEX_STATUS (status) USING BTREE
 #创建第三方信息表
 CREATE TABLE third_info_tb(
 third_info_id bigint(20) NOT NULL  COMMENT '第三方信息id',
-wx_openid varchar(255) COMMENT '微信openid，多个，格式[{subscriptionId:'1004908098840150018',openid:'sdfsdfdsf2fd'}]',
+wx_openid longtext COMMENT '微信openid，多个，格式[{subscriptionId:'1004908098840150018',openid:'sdfsdfdsf2fd'}]',
 wx_uuid varchar(255) COMMENT '微信uuid',
 wechat varchar(255) COMMENT '微信号',
 qq varchar(255) COMMENT 'qq号',
@@ -59,7 +59,7 @@ create_date datetime COMMENT '创建时间',
 update_date datetime COMMENT '更新时间',
 account_id bigint(20) COMMENT '账户id外键',
 PRIMARY KEY (third_info_id),
-INDEX INDEX_WXOPENID (wx_openid) USING BTREE,
+INDEX INDEX_WXOPENID (wx_openid),
 INDEX INDEX_WXUUID (wx_uuid) USING BTREE,
 INDEX INDEX_ACCOUNTID (account_id) USING BTREE
 )ENGINE = InnoDB  DEFAULT CHARSET=utf8 COMMENT='第三方信息表';
@@ -180,8 +180,12 @@ img_address varchar(255)  COMMENT '奖品图标',
 content longtext  COMMENT '奖品内容',
 create_date datetime COMMENT '创建时间',
 update_date datetime COMMENT '修改时间',
+subscription_id bigint(20) COMMENT '公众号id外键',
+account_id bigint(20) COMMENT '创建奖品账户id外键',
 PRIMARY KEY (prize_id),
-INDEX INDEX_DAYNUMBER (day_number) USING BTREE
+INDEX INDEX_DAYNUMBER (day_number) USING BTREE,
+INDEX INDEX_SUBSCRIPTIONID (subscription_id) USING BTREE,
+INDEX INDEX_ACCOUNTID (account_id) USING BTREE
 )ENGINE = InnoDB  DEFAULT CHARSET=utf8 COMMENT='奖品表';
 
 #创建签到奖品表 

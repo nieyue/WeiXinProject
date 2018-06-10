@@ -114,7 +114,7 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 	 	map.put("wx_uuid", wxUuid);
 	 	Map<String,Object> likemap=new HashMap<String,Object>();
 	 	//openid为数据集合，所以，模糊查询
-	 	map.put("wx_openid", wxOpenid);
+	 	likemap.put("wx_openid", wxOpenid);
 	 	Map<String, Object> nmap = MyDom4jUtil.getNoNullMap(map);
 	 	Map<String, Object> nlikemap = MyDom4jUtil.getNoNullMap(likemap);
 	 	if(nmap.size()<=0&&nlikemap.size()<=0){
@@ -200,22 +200,35 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 	 	Map<String,Object> pwmap=new HashMap<String,Object>();
 	 	pwmap.put("day_number", realDayNumber);
 	 	pw.allEq(MyDom4jUtil.getNoNullMap(pwmap));
-		List<Prize> pl = prizeService.list(1, 1, null, null, pw);
+		List<Prize> pl = prizeService.list(1, Integer.MAX_VALUE, null, null, pw);
 		if(pl.size()>0){
-			Prize p = pl.get(0);
-			//发奖品
-			SignPrize sp=new SignPrize();
-			sp.setDayNumber(p.getDayNumber());
-			sp.setName(p.getName());
-			sp.setNumber(p.getNumber());
-			sp.setImgAddress(p.getImgAddress());
-			sp.setContent(p.getContent());
-			sp.setPrizeDate(new Date());
-			sp.setStatus(1);//状态，1申请领奖，2领取成功，3拒绝发送
-			sp.setSubscriptionId(subscriptionId);
-			sp.setPrizeId(p.getPrizeId());
-			sp.setAccountId(thirdInfo.getAccountId());
-			signPrizeService.add(sp);
+			pl.forEach((e)->{
+				Prize p=pl.get(0);
+				if(subscription.getAccountId().equals(e.getAccountId())//创建奖品的账户id
+						&&subscriptionId.equals(e.getSubscriptionId())
+						){
+					//符合最高级别的
+					p=e;
+				}else if(subscriptionId.equals(e.getSubscriptionId())){
+					//公众号级别为第二
+					p=e;
+				}else if(subscription.getAccountId().equals(e.getAccountId())){
+					p=e;
+				}
+				//发奖品
+				SignPrize sp=new SignPrize();
+				sp.setDayNumber(p.getDayNumber());
+				sp.setName(p.getName());
+				sp.setNumber(p.getNumber());
+				sp.setImgAddress(p.getImgAddress());
+				sp.setContent(p.getContent());
+				sp.setPrizeDate(new Date());
+				sp.setStatus(1);//状态，1申请领奖，2领取成功，3拒绝发送
+				sp.setSubscriptionId(subscriptionId);
+				sp.setPrizeId(p.getPrizeId());
+				sp.setAccountId(thirdInfo.getAccountId());
+				signPrizeService.add(sp);
+			});
 		}
 			return list;
 	}

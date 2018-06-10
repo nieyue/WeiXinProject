@@ -1,11 +1,18 @@
 package com.nieyue.business;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import org.springframework.context.annotation.Configuration;
+
+import com.nieyue.bean.KfArticle;
+import com.nieyue.bean.KfMessage;
+import com.nieyue.exception.CommonRollbackException;
 
 import me.chanjar.weixin.common.api.WxConsts;
 import me.chanjar.weixin.common.exception.WxErrorException;
-import me.chanjar.weixin.mp.api.WxMpConfigStorage;
 import me.chanjar.weixin.mp.api.WxMpInMemoryConfigStorage;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.api.impl.WxMpServiceImpl;
@@ -21,10 +28,13 @@ import net.sf.json.JSONObject;
  * @author 聂跃
  * @date 2018年6月8日
  */
+@Configuration
 public class WeXinMpBusiness {
-	
-	 WxMpService wxMpService=new WxMpServiceImpl();// 实际项目中请注意要保持单例，不要在每次请求时构造实例，具体可以参考demo项目
-	  
+	//存放多个WxMpInMemoryConfigStorage
+	Map<String,WxMpInMemoryConfigStorage> mapWxMpInMemoryConfigStorage=new HashMap<>();
+	//存放多个WxMpService
+	Map<String,WxMpService> mapWxMpService=new HashMap<>();
+	WxMpService wxMpService;
 	/**
 	 * 初始化网页
 	 * @throws WxErrorException 
@@ -56,7 +66,7 @@ public class WeXinMpBusiness {
 	 * 初始化
 	 * @throws WxErrorException 
 	 */
-	public  void init(
+	public void init(
 			String appid,
 			String secret,
 			String token,
@@ -65,10 +75,82 @@ public class WeXinMpBusiness {
 		WxMpInMemoryConfigStorage config = new WxMpInMemoryConfigStorage();
 		config.setAppId(appid); // 设置微信公众号的appid
 		config.setSecret(secret); // 设置微信公众号的app corpSecret
-		config.setToken(token); // 设置微信公众号的token
+		if(token==null||"".equals(token)){
+			config.setToken("nieyue"); // 设置微信公众号的token						
+		}else{
+			config.setToken(token); // 设置微信公众号的token			
+		}
 		config.setAesKey(aesKey); // 设置微信公众号的EncodingAESKey
 		config.setAccessToken("10_BwHl2v2ZvCEZQC-N5SkxS1bYN9ZOvYpio5cgFHG2V2dTgaunYi7EfJVKVWaDYCExTJ0TUcgG_nOhbxIONLU7vrIddGN9f37CRjSz6hSOfS3rvSwFU-avXpDjuyrzeDfgpzbMyvlC8kNhL9rrUDLbAAALUC");
-		wxMpService.setWxMpConfigStorage(config);
+		//如果存在直接取，
+		if(mapWxMpInMemoryConfigStorage.get(appid)!=null){
+		//System.out.println(appid);
+		wxMpService=mapWxMpService.get(appid);
+		}else{
+			mapWxMpInMemoryConfigStorage.put(appid, config);
+			wxMpService=new WxMpServiceImpl();
+			wxMpService.setWxMpConfigStorage(config);
+			mapWxMpService.put(appid, wxMpService);
+		}
+	}
+	/**
+	 * 客服消息
+	 * @param openidList 微信openid集合
+	 * @param kfMessage 客服消息
+	 * @param kfArticleList 客服消息文章，外链图文必选
+	 * @throws WxErrorException 
+	 * @throws Exception
+	 */
+	public  void sendWxMpKefuMessage(
+			List<String> openidList,
+			KfMessage kfMessage,
+			List<KfArticle> kfArticleList
+			) throws WxErrorException {
+		//外链图文文章
+		List<WxMpKefuMessage.WxArticle> list=new ArrayList<>();
+		if(kfMessage.getMsgtype().equals("news")){
+			kfArticleList.forEach((ka)->{
+				WxMpKefuMessage.WxArticle wx=new WxMpKefuMessage.WxArticle();
+				wx.setTitle(ka.getTitle());
+				wx.setUrl(ka.getUrl());
+				wx.setPicUrl(ka.getPicurl());
+				wx.setDescription(ka.getDescription());
+				list.add(wx);
+			});
+		}
+		openidList.forEach((e)->{
+			 WxMpKefuMessage message;
+			if(kfMessage.getMsgtype().equals("text")){
+				message = WxMpKefuMessage.TEXT().toUser(e).content(kfMessage.getContent()).build();
+			}else if(kfMessage.getMsgtype().equals("image")){
+				message = WxMpKefuMessage.IMAGE().toUser(e).mediaId(kfMessage.getMediaId()).build();
+			}else if(kfMessage.getMsgtype().equals("voice")){
+				message = WxMpKefuMessage.VOICE().toUser(e).mediaId(kfMessage.getMediaId()).build();
+			}else if(kfMessage.getMsgtype().equals("video")){
+				message = WxMpKefuMessage.VIDEO().toUser(e).mediaId(kfMessage.getMediaId()).thumbMediaId(kfMessage.getThumbMediaId()).title(kfMessage.getTitle()).description(kfMessage.getDescription()).build();
+			}else if(kfMessage.getMsgtype().equals("music")){
+				message = WxMpKefuMessage.MUSIC().toUser(e).thumbMediaId(kfMessage.getThumbMediaId()).title(kfMessage.getTitle()).description(kfMessage.getDescription()).musicUrl(kfMessage.getMusicurl()).hqMusicUrl(kfMessage.getHqmusicurl()).build();
+			}else if(kfMessage.getMsgtype().equals("news")){
+				message = WxMpKefuMessage.NEWS().toUser(e).articles(list).toUser(e).build();
+			}else if(kfMessage.getMsgtype().equals("mpnews")){
+				message = WxMpKefuMessage.MPNEWS().toUser(e).mediaId(kfMessage.getMediaId()).build();
+			}else if(kfMessage.getMsgtype().equals("wxcard")){
+				message = WxMpKefuMessage.WXCARD().toUser(e).cardId(kfMessage.getCardId()).build();
+			}else{
+				throw new CommonRollbackException("没有此客服类型");
+			}
+			/*//小程序暂无
+			else if(kfMessage.getMsgtype().equals("miniprogrampage")){
+			}*/
+				try {
+					wxMpService.getKefuService().sendKefuMessage(message);
+				} catch (WxErrorException e1) {
+					if(JSONObject.fromObject(e1.getMessage()).get("errcode").equals(45015)){
+						//throw new CommonRollbackException("该用户不活跃");
+						System.out.println("该用户不活跃");
+					}
+				}
+		});
 	}
 	/**
 	 * 客服消息
@@ -76,7 +158,7 @@ public class WeXinMpBusiness {
 	 * @throws WxErrorException 
 	 * @throws Exception
 	 */
-	public  void sendWxMpKefuMessage() {
+	public  void sendWxMpKefuMessage2() {
 		// 用户的openid在下面地址获得 
 		// https://mp.weixin.qq.com/debug/cgi-bin/apiinfo?t=index&type=用户管理&form=获取关注者列表接口%20/user/get *--------------------------------------
 		String openid = "oKs_907lCS6pb2tMNjzooOICN2_o";
@@ -123,7 +205,9 @@ public class WeXinMpBusiness {
 		String accessToken="10_BwHl2v2ZvCEZQC-N5SkxS1bYN9ZOvYpio5cgFHG2V2dTgaunYi7EfJVKVWaDYCExTJ0TUcgG_nOhbxIONLU7vrIddGN9f37CRjSz6hSOfS3rvSwFU-avXpDjuyrzeDfgpzbMyvlC8kNhL9rrUDLbAAALUC";
 		WeXinMpBusiness weXinMpBusiness=new WeXinMpBusiness();
 		weXinMpBusiness.init(appid,secret, token, aesKey);
-		weXinMpBusiness.sendWxMpKefuMessage();
+		weXinMpBusiness.sendWxMpKefuMessage2();
+		weXinMpBusiness.init(appid,secret, token, aesKey);
+		weXinMpBusiness.sendWxMpKefuMessage2();
 		//WeXinMpBusiness.initJsApi("http://www.baidu.com");
 	}
 

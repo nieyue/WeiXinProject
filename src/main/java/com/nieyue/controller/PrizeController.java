@@ -50,6 +50,8 @@ public class PrizeController extends BaseController<Prize,Long> {
 	@ApiOperation(value = "奖品列表", notes = "奖品分页浏览")
 	@ApiImplicitParams({
 		@ApiImplicitParam(name="dayNumber",value="连续天数id",dataType="int", paramType = "query"),
+		@ApiImplicitParam(name="subscriptionId",value="公众号id",dataType="long", paramType = "query"),
+		@ApiImplicitParam(name="accountId",value="公众号id",dataType="long", paramType = "query"),
 		@ApiImplicitParam(name="pageNum",value="页头数位",dataType="int", paramType = "query",defaultValue="1"),
 		@ApiImplicitParam(name="pageSize",value="每页数目",dataType="int", paramType = "query",defaultValue="10"),
 		@ApiImplicitParam(name="orderName",value="排序字段",dataType="string", paramType = "query",defaultValue="updateDate"),
@@ -58,6 +60,8 @@ public class PrizeController extends BaseController<Prize,Long> {
 	@RequestMapping(value = "/list", method = {RequestMethod.GET,RequestMethod.POST})
 	public @ResponseBody StateResultList<List<Prize>> list(
 			@RequestParam(value="dayNumber",required=false)Integer dayNumber,
+			@RequestParam(value="subscriptionId",required=false)Long subscriptionId,
+			@RequestParam(value="accountId",required=false)Long accountId,
 			@RequestParam(value="pageNum",defaultValue="1",required=false)int pageNum,
 			@RequestParam(value="pageSize",defaultValue="10",required=false) int pageSize,
 			@RequestParam(value="orderName",required=false,defaultValue="updateDate") String orderName,
@@ -65,6 +69,8 @@ public class PrizeController extends BaseController<Prize,Long> {
 		Wrapper<Prize> wrapper=new EntityWrapper<Prize>();
 	 	Map<String,Object> map=new HashMap<String,Object>();
 	 	map.put("day_number", dayNumber);
+	 	map.put("subscription_id", subscriptionId);
+	 	map.put("account_id", accountId);
 	 	wrapper.allEq(MyDom4jUtil.getNoNullMap(map));
 		StateResultList<List<Prize>> rl = super.list(pageNum, pageSize, orderName, orderWay,wrapper);
 			return rl;
@@ -79,6 +85,8 @@ public class PrizeController extends BaseController<Prize,Long> {
 		Wrapper<Prize> wrapper=new EntityWrapper<Prize>();
 	 	Map<String,Object> map=new HashMap<String,Object>();
 	 	map.put("day_number", prize.getDayNumber());
+	 	map.put("subscription_id", prize.getSubscriptionId());
+	 	map.put("account_id", prize.getAccountId());
 	 	wrapper.allEq(MyDom4jUtil.getNoNullMap(map));
 		List<Prize> islist = prizeService.list(1, 1, null, null, wrapper);
 		if(islist.size()>0){
@@ -101,6 +109,8 @@ public class PrizeController extends BaseController<Prize,Long> {
 		Wrapper<Prize> wrapper=new EntityWrapper<Prize>();
 	 	Map<String,Object> map=new HashMap<String,Object>();
 	 	map.put("day_number", prize.getDayNumber());
+	 	map.put("subscription_id", prize.getSubscriptionId());
+	 	map.put("account_id", prize.getAccountId());
 	 	wrapper.allEq(MyDom4jUtil.getNoNullMap(map));
 		List<Prize> islist = prizeService.list(1, 1, null, null, wrapper);
 		if(islist.size()>0){
@@ -134,14 +144,20 @@ public class PrizeController extends BaseController<Prize,Long> {
 	@ApiOperation(value = "奖品数量", notes = "奖品数量查询")
 	@ApiImplicitParams({
 		@ApiImplicitParam(name="accountId",value="账户id",dataType="int", paramType = "query"),
+		@ApiImplicitParam(name="subscriptionId",value="公众号id",dataType="long", paramType = "query"),
+		@ApiImplicitParam(name="accountId",value="创建奖品账户id",dataType="long", paramType = "query"),
 	  })
 	@RequestMapping(value = "/count", method = {RequestMethod.GET,RequestMethod.POST})
 	public @ResponseBody StateResultList<List<Integer>> count(
 			@RequestParam(value="dayNumber",required=false)Integer dayNumber,
+			@RequestParam(value="subscriptionId",required=false)Long subscriptionId,
+			@RequestParam(value="accountId",required=false)Long accountId,
 			HttpSession session)  {
 		Wrapper<Prize> wrapper=new EntityWrapper<Prize>();
 	 	Map<String,Object> map=new HashMap<String,Object>();
 	 	map.put("day_number", dayNumber);
+	 	map.put("subscription_id", subscriptionId);
+	 	map.put("account_id", accountId);
 	 	wrapper.allEq(MyDom4jUtil.getNoNullMap(map));
 		StateResultList<List<Integer>> c = super.count(wrapper);
 		return c;

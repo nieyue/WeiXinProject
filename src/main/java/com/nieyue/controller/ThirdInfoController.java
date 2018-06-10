@@ -4,6 +4,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
@@ -67,10 +69,17 @@ public class ThirdInfoController extends BaseController<ThirdInfo,Long> {
 			@RequestParam(value="orderWay",required=false,defaultValue="desc") String orderWay)  {
 		 	Wrapper<ThirdInfo> wrapper=new EntityWrapper<ThirdInfo>();
 		 	Map<String,Object> map=new HashMap<String,Object>();
-		 	map.put("wx_openid", wxOpenid);
 		 	map.put("wx_uuid", wxUuid);
 		 	map.put("account_id", accountId);
 		 	wrapper.allEq(MyDom4jUtil.getNoNullMap(map));
+		 	//openid为数据集合，所以，模糊查询
+		 	Map<String,Object> likemap=new HashMap<String,Object>();
+		 	likemap.put("wx_openid", wxOpenid);
+		 	Map<String, Object> nlikemap = MyDom4jUtil.getNoNullMap(likemap);
+		 	Set<Entry<String, Object>> newmaplie = nlikemap.entrySet();
+		 	for (Entry<String, Object> entry : newmaplie) {
+		 		wrapper.like(entry.getKey(),(String)entry.getValue());			
+		 	}
 			StateResultList<List<ThirdInfo>> rl = super.list(pageNum, pageSize, orderName, orderWay,wrapper);
 			return rl;
 	}
@@ -126,12 +135,19 @@ public class ThirdInfoController extends BaseController<ThirdInfo,Long> {
 			@RequestParam(value="wxUuid",required=false)String wxUuid,
 			@RequestParam(value="accountId",required=false)Long accountId,
 			HttpSession session)  {
-		Wrapper<ThirdInfo> wrapper=new EntityWrapper<ThirdInfo>();
-		Map<String,Object> map=new HashMap<String,Object>();
-	 	map.put("wx_openid", wxOpenid);
+	 	Wrapper<ThirdInfo> wrapper=new EntityWrapper<ThirdInfo>();
+	 	Map<String,Object> map=new HashMap<String,Object>();
 	 	map.put("wx_uuid", wxUuid);
 	 	map.put("account_id", accountId);
 	 	wrapper.allEq(MyDom4jUtil.getNoNullMap(map));
+	 	//openid为数据集合，所以，模糊查询
+	 	Map<String,Object> likemap=new HashMap<String,Object>();
+	 	likemap.put("wx_openid", wxOpenid);
+	 	Map<String, Object> nlikemap = MyDom4jUtil.getNoNullMap(likemap);
+	 	Set<Entry<String, Object>> newmaplie = nlikemap.entrySet();
+	 	for (Entry<String, Object> entry : newmaplie) {
+	 		wrapper.like(entry.getKey(),(String)entry.getValue());			
+	 	}
 		StateResultList<List<Integer>> c = super.count(wrapper);
 		return c;
 	}

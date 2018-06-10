@@ -63,6 +63,16 @@ public class Prize implements Serializable{
      */
     @ApiModelProperty(value="更新时间",example="更新时间")
     private Date updateDate;
+    /**
+     * 公众号id
+     */
+    @ApiModelProperty(value="公众号id",example="公众号id")
+    private Long subscriptionId;
+    /**
+     * 创建奖品账户id
+     */
+    @ApiModelProperty(value="创建奖品账户id",example="创建奖品账户id")
+    private Long accountId;
 	public Long getPrizeId() {
 		return prizeId;
 	}
@@ -113,6 +123,18 @@ public class Prize implements Serializable{
 	}
 	public static long getSerialversionuid() {
 		return serialVersionUID;
+	}
+	public Long getSubscriptionId() {
+		return subscriptionId;
+	}
+	public void setSubscriptionId(Long subscriptionId) {
+		this.subscriptionId = subscriptionId;
+	}
+	public Long getAccountId() {
+		return accountId;
+	}
+	public void setAccountId(Long accountId) {
+		this.accountId = accountId;
 	}
 
 }
