@@ -11,12 +11,18 @@ import com.nieyue.bean.Sign;
  */
 public interface SignService extends BaseService<Sign, Long>{
 	/**
-	 * 签到
+	 * 账户签到
 	 * @param subscriptionId 公众号id
 	 * @param accountId 账户id
-	 * @param wxOpenid  微信openid
 	 * @param wxUuid 微信uuid
 	 * @return
 	 */
-	public  List<Sign> signSign(Long subscriptionId,Long accountId,String wxOpenid,String wxUuid); 
+	public  List<Sign> accountSign(Long subscriptionId,Long accountId,String wxUuid); 
+	/**
+	 * openid签到
+	 * @param subscriptionId 公众号id
+	 * @param wxOpenid  微信openid
+	 * @return
+	 */
+	public  List<Sign> openidSign(Long subscriptionId,String wxOpenid); 
 }

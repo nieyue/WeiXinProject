@@ -45,6 +45,11 @@ public class Subscription implements Serializable{
     @ApiModelProperty(value="公众号秘钥",example="公众号秘钥")
     private String appsecret;
     /**
+     * 微信接口令牌
+     */
+    @ApiModelProperty(value="微信接口令牌",example="微信接口令牌")
+    private String token;
+    /**
      * 公众号原始id
      */
     @ApiModelProperty(value="公众号原始id",example="公众号原始id")
@@ -147,6 +152,12 @@ public class Subscription implements Serializable{
 	}
 	public static long getSerialversionuid() {
 		return serialVersionUID;
+	}
+	public String getToken() {
+		return token;
+	}
+	public void setToken(String token) {
+		this.token = token;
 	}
 
 }

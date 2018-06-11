@@ -40,6 +40,11 @@ public class SignRecord implements Serializable{
     @ApiModelProperty(value="签到时间",example="签到时间")
     private Date signDate;
     /**
+     * 微信openid
+     */
+    @ApiModelProperty(value="微信openid",example="微信openid")
+    private String openid;
+    /**
      * 公众号id外键
      */
     @ApiModelProperty(value="公众号id外键",example="公众号id外键")
@@ -105,6 +110,12 @@ public class SignRecord implements Serializable{
 	}
 	public void setAccount(Account account) {
 		this.account = account;
+	}
+	public String getOpenid() {
+		return openid;
+	}
+	public void setOpenid(String openid) {
+		this.openid = openid;
 	}
 
 }

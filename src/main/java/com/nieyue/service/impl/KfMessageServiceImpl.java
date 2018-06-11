@@ -54,15 +54,19 @@ public class KfMessageServiceImpl extends BaseServiceImpl<KfMessage,Long> implem
 			throw new CommonRollbackException("公众号缺少appid或者appsecret");
 		}
 		try {
-			weXinMpBusiness.init(subscription.getAppid(), subscription.getAppsecret(), null, "aes");
-			List<String> openidList=new ArrayList<>();
-			openidList.add("oKs_907lCS6pb2tMNjzooOICN2_o");
-			
+			//初始化公众号
+			weXinMpBusiness.init(subscription.getAppid(), subscription.getAppsecret(), subscription.getToken(), "aes");
+			//获取所有账户			
+			List<String> openidList=weXinMpBusiness.getOpenidList();
+			//如果是图文
+			List<KfArticle> kfArticleList = null;
+			if(kfMessage.getMsgtype().equals("news")){				
 			Wrapper<KfArticle> wrapper=new EntityWrapper<KfArticle>();
 		 	Map<String,Object> map=new HashMap<String,Object>();
 		 	map.put("kf_message_id", kfMessageId);
 		 	wrapper.allEq(MyDom4jUtil.getNoNullMap(map));
-		 	List<KfArticle> kfArticleList = kfArticleService.list(1, Integer.MAX_VALUE, "updateDate", "desc", wrapper);
+		 	kfArticleList = kfArticleService.list(1, Integer.MAX_VALUE, "updateDate", "desc", wrapper);
+			}
 			weXinMpBusiness.sendWxMpKefuMessage(openidList, kfMessage, kfArticleList);
 		} catch (WxErrorException e) {
 			if(JSONObject.fromObject(e.getMessage()).get("errcode").equals(45015)){

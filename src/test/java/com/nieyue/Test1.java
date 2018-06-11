@@ -3,11 +3,15 @@ package com.nieyue;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.baomidou.mybatisplus.toolkit.StringUtils;
+
 import me.chanjar.weixin.common.exception.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpInMemoryConfigStorage;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.api.impl.WxMpServiceImpl;
 import me.chanjar.weixin.mp.bean.kefu.WxMpKefuMessage;
+import me.chanjar.weixin.mp.bean.result.WxMpUser;
+import me.chanjar.weixin.mp.bean.result.WxMpUserList;
 import me.chanjar.weixin.mp.bean.template.WxMpTemplateData;
 import me.chanjar.weixin.mp.bean.template.WxMpTemplateMessage;
 
@@ -45,5 +49,24 @@ public class Test1 {
 				 .url("http://www.baidu.com")
 				 .data(tl)
 				 .build());
+		 String lang = "zh_CN"; //语言
+		//获取用户信息
+		 WxMpUser user = wxService.getUserService().userInfo(openid,lang);
+		 System.err.println(user.toString());
+		 //获取用户openid列表
+		 WxMpUserList wxUserList = wxService.getUserService().userList(null);
+		 List<String> list = wxUserList.getOpenids();
+		 list.forEach((e)->{
+				System.err.println("openid="+e);
+			});
+		 while(!StringUtils.isEmpty(wxUserList.getNextOpenid())){
+			 wxUserList = wxService.getUserService().userList(wxUserList.getNextOpenid());
+			List<String> list2 = wxUserList.getOpenids();
+			list2.forEach((e)->{
+				System.err.println("openid="+e);
+			});
+		 }
+		 
+
 	}
 }

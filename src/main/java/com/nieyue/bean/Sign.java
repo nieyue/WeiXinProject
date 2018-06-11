@@ -51,6 +51,11 @@ public class Sign implements Serializable{
     @ApiModelProperty(value="更新时间",example="更新时间")
     private Date updateDate;
     /**
+     * 微信openid
+     */
+    @ApiModelProperty(value="微信openid",example="微信openid")
+    private String openid;
+    /**
      * 公众号id外键
      */
     @ApiModelProperty(value="公众号id外键",example="公众号id外键")
@@ -128,6 +133,12 @@ public class Sign implements Serializable{
 	}
 	public void setAccount(Account account) {
 		this.account = account;
+	}
+	public String getOpenid() {
+		return openid;
+	}
+	public void setOpenid(String openid) {
+		this.openid = openid;
 	}
 
 }

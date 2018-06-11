@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.springframework.context.annotation.Configuration;
 
+import com.baomidou.mybatisplus.toolkit.StringUtils;
 import com.nieyue.bean.KfArticle;
 import com.nieyue.bean.KfMessage;
 import com.nieyue.exception.CommonRollbackException;
@@ -19,6 +20,7 @@ import me.chanjar.weixin.mp.api.impl.WxMpServiceImpl;
 import me.chanjar.weixin.mp.bean.kefu.WxMpKefuMessage;
 import me.chanjar.weixin.mp.bean.result.WxMpOAuth2AccessToken;
 import me.chanjar.weixin.mp.bean.result.WxMpUser;
+import me.chanjar.weixin.mp.bean.result.WxMpUserList;
 import me.chanjar.weixin.mp.bean.template.WxMpTemplateData;
 import me.chanjar.weixin.mp.bean.template.WxMpTemplateMessage;
 import net.sf.json.JSONObject;
@@ -64,9 +66,14 @@ public class WeXinMpBusiness {
 	}
 	/**
 	 * 初始化
+	 * @param appid 公众号appid
+	 * @param secret 公众号 秘钥
+	 * @param token 公众号服务token
+	 * @param aesKey 加密协议
 	 * @throws WxErrorException 
+	 * @return  wxMpService 当前公众号服务
 	 */
-	public void init(
+	public WxMpService init(
 			String appid,
 			String secret,
 			String token,
@@ -81,7 +88,6 @@ public class WeXinMpBusiness {
 			config.setToken(token); // 设置微信公众号的token			
 		}
 		config.setAesKey(aesKey); // 设置微信公众号的EncodingAESKey
-		config.setAccessToken("10_BwHl2v2ZvCEZQC-N5SkxS1bYN9ZOvYpio5cgFHG2V2dTgaunYi7EfJVKVWaDYCExTJ0TUcgG_nOhbxIONLU7vrIddGN9f37CRjSz6hSOfS3rvSwFU-avXpDjuyrzeDfgpzbMyvlC8kNhL9rrUDLbAAALUC");
 		//如果存在直接取，
 		if(mapWxMpInMemoryConfigStorage.get(appid)!=null){
 		//System.out.println(appid);
@@ -92,6 +98,31 @@ public class WeXinMpBusiness {
 			wxMpService.setWxMpConfigStorage(config);
 			mapWxMpService.put(appid, wxMpService);
 		}
+		return wxMpService;
+	}
+	/**
+	 * 获取该公众号用户列表
+	 * @throws WxErrorException
+	 * @return openidList 当前公众号所有用户openid
+	 */
+	public List<String> getOpenidList() throws WxErrorException{
+		List<String> openidList=new ArrayList<>();
+		 //获取用户openid列表
+		 WxMpUserList wxUserList = wxMpService.getUserService().userList(null);
+		 List<String> list = wxUserList.getOpenids();
+		 openidList.addAll(list);
+		/* list.forEach((e)->{
+				System.err.println("openid="+e);
+			});*/
+		 while(!StringUtils.isEmpty(wxUserList.getNextOpenid())){
+			 wxUserList = wxMpService.getUserService().userList(wxUserList.getNextOpenid());
+			List<String> list2 = wxUserList.getOpenids();
+			openidList.addAll(list2);
+			/*list2.forEach((e)->{
+				System.err.println("openid="+e);
+			});*/
+		 }
+		 return openidList;
 	}
 	/**
 	 * 客服消息

@@ -53,6 +53,7 @@ public class SignPrizeController extends BaseController<SignPrize,Long> {
 	@ApiImplicitParams({
 		@ApiImplicitParam(name="dayNumber",value="连续天数",dataType="long", paramType = "query"),
 		@ApiImplicitParam(name="status",value="状态，1待领取，2已申请，3领取成功，4拒绝发送",dataType="int", paramType = "query"),
+		@ApiImplicitParam(name="openid",value="微信openid",dataType="string", paramType = "query"),
 		@ApiImplicitParam(name="subscriptionId",value="公众号id",dataType="long", paramType = "query"),
 		@ApiImplicitParam(name="prizeId",value="奖品id",dataType="long", paramType = "query"),
 		@ApiImplicitParam(name="accountId",value="账户id",dataType="long", paramType = "query"),
@@ -65,6 +66,7 @@ public class SignPrizeController extends BaseController<SignPrize,Long> {
 	public @ResponseBody StateResultList<List<SignPrize>> list(
 			@RequestParam(value="dayNumber",required=false)Long dayNumber,
 			@RequestParam(value="status",required=false)Integer status,
+			@RequestParam(value="openid",required=false)String openid,
 			@RequestParam(value="subscriptionId",required=false)Long subscriptionId,
 			@RequestParam(value="prizeId",required=false)Long prizeId,
 			@RequestParam(value="accountId",required=false)Long accountId,
@@ -76,6 +78,7 @@ public class SignPrizeController extends BaseController<SignPrize,Long> {
 	 	Map<String,Object> map=new HashMap<String,Object>();
 	 	map.put("day_number", dayNumber);
 	 	map.put("status", status);
+	 	map.put("openid", openid);
 	 	map.put("subscription_id", subscriptionId);
 	 	map.put("prize_id", prizeId);
 	 	map.put("account_id", accountId);
@@ -125,6 +128,7 @@ public class SignPrizeController extends BaseController<SignPrize,Long> {
 	@ApiImplicitParams({
 		@ApiImplicitParam(name="dayNumber",value="连续天数",dataType="long", paramType = "query"),
 		@ApiImplicitParam(name="status",value="状态，1待领取，2已申请，3领取成功，4拒绝发送",dataType="int", paramType = "query"),
+		@ApiImplicitParam(name="openid",value="微信openid",dataType="string", paramType = "query"),
 		@ApiImplicitParam(name="subscriptionId",value="公众号id",dataType="long", paramType = "query"),
 		@ApiImplicitParam(name="prizeId",value="奖品id",dataType="long", paramType = "query"),
 		@ApiImplicitParam(name="accountId",value="账户id",dataType="long", paramType = "query"),
@@ -133,6 +137,7 @@ public class SignPrizeController extends BaseController<SignPrize,Long> {
 	public @ResponseBody StateResultList<List<Integer>> count(
 			@RequestParam(value="dayNumber",required=false)Long dayNumber,
 			@RequestParam(value="status",required=false)Integer status,
+			@RequestParam(value="openid",required=false)String openid,
 			@RequestParam(value="subscriptionId",required=false)Long subscriptionId,
 			@RequestParam(value="prizeId",required=false)Long prizeId,
 			@RequestParam(value="accountId",required=false)Long accountId,
@@ -141,6 +146,7 @@ public class SignPrizeController extends BaseController<SignPrize,Long> {
 	 	Map<String,Object> map=new HashMap<String,Object>();
 	 	map.put("day_number", dayNumber);
 	 	map.put("status", status);
+	 	map.put("openid", openid);
 	 	map.put("subscription_id", subscriptionId);
 	 	map.put("prize_id", prizeId);
 	 	map.put("account_id", accountId);
@@ -184,7 +190,6 @@ public class SignPrizeController extends BaseController<SignPrize,Long> {
 				return ResultUtil.getSlefSRSuccessList(list);
 			}
 		}
-		
 		if(signPrize.getStatus()==2){
 			throw new CommonRollbackException("已经申请，请等待审核");
 		}else if(signPrize.getStatus()==3){

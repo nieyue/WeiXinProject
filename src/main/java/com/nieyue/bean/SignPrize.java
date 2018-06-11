@@ -65,6 +65,11 @@ public class SignPrize implements Serializable{
     @ApiModelProperty(value="状态，1待领取，2已申请，3领取成功，4拒绝发送",example="状态，1待领取，2已申请，3领取成功，4拒绝发送")
     private Integer status;
     /**
+     * 微信openid
+     */
+    @ApiModelProperty(value="微信openid",example="微信openid")
+    private String openid;
+    /**
      * 奖品id外键
      */
     @ApiModelProperty(value="奖品id外键",example="奖品id外键")
@@ -171,6 +176,12 @@ public class SignPrize implements Serializable{
 	}
 	public void setAccount(Account account) {
 		this.account = account;
+	}
+	public String getOpenid() {
+		return openid;
+	}
+	public void setOpenid(String openid) {
+		this.openid = openid;
 	}
 	
 }
