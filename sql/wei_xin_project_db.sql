@@ -15,6 +15,35 @@ update_date datetime COMMENT '更新时间',
 PRIMARY KEY (role_id)
 )ENGINE = InnoDB  DEFAULT CHARSET=utf8 COMMENT='角色表';
 
+#创建权限表
+CREATE TABLE permission_tb(
+permission_id bigint(20) NOT NULL AUTO_INCREMENT COMMENT '权限id',
+type tinyint(4) COMMENT '权限类型，默认0开放，1鉴权',
+manager_name varchar(255) COMMENT '权限管理名',
+name varchar(255) COMMENT '权限名',
+route varchar(255) unique COMMENT '权限路由',
+update_date datetime COMMENT '更新时间',
+PRIMARY KEY (permission_id),
+INDEX INDEX_TYPE (type) USING BTREE,
+INDEX INDEX_MANAGERNAME (manager_name) USING BTREE,
+INDEX INDEX_NAME (name) USING BTREE,
+INDEX INDEX_ROUTE (route) USING BTREE
+)ENGINE = InnoDB AUTO_INCREMENT=1000 DEFAULT CHARSET=utf8 COMMENT='权限表';
+
+#创建角色权限表
+CREATE TABLE role_permission_tb(
+role_permission_id bigint(20) NOT NULL AUTO_INCREMENT COMMENT '角色权限id',
+region tinyint(4) COMMENT "范围，1公共，2自身",
+role_id int(11) COMMENT '角色id,外键',
+update_date datetime COMMENT '更新时间',
+permission_id bigint(20) COMMENT '权限id,外键',
+PRIMARY KEY (role_permission_id),
+UNIQUE KEY UNIQUE_ROLEID_PERMISSIONID (role_id,permission_id),
+INDEX INDEX_REGION (region) USING BTREE,
+INDEX INDEX_ROLEID (role_id) USING BTREE,
+INDEX INDEX_PERMISSIONID (permission_id) USING BTREE
+)ENGINE = InnoDB AUTO_INCREMENT=1000 DEFAULT CHARSET=utf8 COMMENT='角色权限表';
+
 #创建账户表 
 CREATE TABLE account_tb(
 account_id bigint(20) NOT NULL  COMMENT '账户id',
@@ -215,6 +244,28 @@ INDEX INDEX_SUBSCRIPTIONID (subscription_id) USING BTREE,
 INDEX INDEX_PRIZEID (prize_id) USING BTREE,
 INDEX INDEX_ACCOUNTID (account_id) USING BTREE
 )ENGINE = InnoDB  DEFAULT CHARSET=utf8 COMMENT='签到奖品表';
+
+#创建收货信息表 
+CREATE TABLE receipt_info_tb(
+receipt_info_id int(11) NOT NULL AUTO_INCREMENT COMMENT '收货信息id',
+name varchar(255) COMMENT '姓名',
+phone varchar(255) COMMENT '手机号',
+province varchar(255) COMMENT '省',
+city varchar(255) COMMENT '市',
+area varchar(255) COMMENT '区',
+address varchar(255) COMMENT '收货地址',
+is_default tinyint(4) DEFAULT 0 COMMENT '默认为0不是，1是',
+create_date datetime   COMMENT '创建时间',
+update_date datetime   COMMENT '更新时间',
+openid bigint(20) COMMENT '微信openid,外键',
+account_id bigint(20) COMMENT '账户id,外键',
+PRIMARY KEY (receipt_info_id),
+INDEX INDEX_OPENID (openid) USING BTREE,
+INDEX INDEX_ACCOUNTID (account_id) USING BTREE,
+INDEX INDEX_ISDEFAULT (is_default) USING BTREE,
+INDEX INDEX_CREATEDATE (create_date) USING BTREE,
+INDEX INDEX_UPDATEDATE (update_date) USING BTREE
+)ENGINE = InnoDB AUTO_INCREMENT=1000 DEFAULT CHARSET=utf8 COMMENT='收货地址表 ';
 
 #设置初始角色
 INSERT IGNORE INTO role_tb (role_id,name,duty,update_date) 

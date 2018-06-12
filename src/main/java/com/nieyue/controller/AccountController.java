@@ -21,19 +21,17 @@ import org.springframework.web.bind.annotation.RestController;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.nieyue.bean.Account;
-import com.nieyue.bean.Role;
+import com.nieyue.business.AccountBusiness;
 import com.nieyue.exception.AccountAlreadyAuthException;
 import com.nieyue.exception.AccountAuthAuditException;
 import com.nieyue.exception.AccountIsExistException;
 import com.nieyue.exception.AccountIsNotExistException;
 import com.nieyue.exception.AccountIsNotLoginException;
 import com.nieyue.exception.AccountPhoneIsExistException;
-import com.nieyue.exception.CommonRollbackException;
 import com.nieyue.exception.MySessionException;
 import com.nieyue.exception.NotAnymoreException;
 import com.nieyue.exception.VerifyCodeErrorException;
 import com.nieyue.service.AccountService;
-import com.nieyue.service.RoleService;
 import com.nieyue.util.MyDESutil;
 import com.nieyue.util.MyDom4jUtil;
 import com.nieyue.util.ResultUtil;
@@ -57,7 +55,7 @@ public class AccountController extends BaseController<Account, Long>{
 	@Autowired
 	private AccountService accountService;
 	@Autowired
-	private RoleService roleService;
+	private AccountBusiness accountBusiness;
 
 	/**
 	 * 账户分页浏览
@@ -369,30 +367,14 @@ public class AccountController extends BaseController<Account, Long>{
 		  @ApiImplicitParam(name="random",value="验证码",dataType="string", paramType = "query",required=true)
 		  })
 	@RequestMapping(value = "/login", method = {RequestMethod.GET,RequestMethod.POST})
-	public @ResponseBody StateResultList<List<Account>> loginAccount(
+	public @ResponseBody StateResultList<List<Map<String,Object>>> loginAccount(
 			@RequestParam(value="adminName") String adminName,
 			@RequestParam(value="password") String password,
 			@RequestParam(value="random") String random,
 			HttpSession session) throws MySessionException  {
-		//1代验证码
-		String ran= (String) session.getAttribute("random");
-		if(ran==null||!ran.equals(random)){
-			throw new VerifyCodeErrorException();//验证码
-		}
-		List<Account> l=new ArrayList<>();
-		Account a = accountService.loginAccount(adminName, password, null);
-		if(a!=null){
-			Role role = roleService.load(a.getRoleId());
-			if(role!=null&&role.getName().indexOf("管理员")>-1){
-			session.setAttribute("role", role);	
-			session.setAttribute("account", a);
-			l.add(a);
-			return ResultUtil.getSlefSRSuccessList(l);
-			}else{
-				throw new MySessionException();	//没有权限			
-			}
-		}
-		throw new CommonRollbackException("账户或密码错误");
+		List<Map<String, Object>> list = accountBusiness.login(adminName, password,random, session);
+		 return ResultUtil.getSlefSRSuccessList(list);
+		
 	}
 	
 	/**
@@ -406,19 +388,14 @@ public class AccountController extends BaseController<Account, Long>{
 		  @ApiImplicitParam(name="random",value="验证码",dataType="string", paramType = "query")
 		  })
 	@RequestMapping(value = "/weblogin", method = {RequestMethod.GET,RequestMethod.POST})
-	public @ResponseBody StateResultList<List<Account>> webLoginAccount(
+	public @ResponseBody StateResultList<List<Map<String,Object>>> webLoginAccount(
 			@RequestParam("adminName") String adminName,
 			@RequestParam("password") String password,
 			@RequestParam(value="random",required=false) String random,
 			HttpSession session)  {
-		List<Account> l=new ArrayList<>();
-		Account a = accountService.loginAccount(adminName, password, null);
-		if(a!=null){
-			session.setAttribute("account", a);
-			l.add(a);
-			return ResultUtil.getSlefSRSuccessList(l);
-		}
-		throw new CommonRollbackException("账户或密码错误");
+		List<Map<String, Object>> list = accountBusiness.webLogin(adminName, password,random, session);
+		return ResultUtil.getSlefSRSuccessList(list);
+		
 	}
 
 	/**

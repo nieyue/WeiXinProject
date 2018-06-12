@@ -70,7 +70,7 @@ spring:
     generator:
       write-numbers-as-strings: true
   session:
-    store-type: none 
+    store-type: redis 
   profiles: 
     active: dev
     #active: prod

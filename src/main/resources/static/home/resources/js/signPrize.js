@@ -8,7 +8,7 @@ Vue.prototype.getQueryString=function (name)
      if(r!=null)return  decodeURIComponent(r[2]); return null;
      //if(r!=null)return  unescape(r[2]); return null;
 };
-var accountId=Vue.prototype.getQueryString("accountId");
+var openid=Vue.prototype.getQueryString("openid");
 //dialog
 Vue.component("loading-toast",{
 	props:{
@@ -151,7 +151,7 @@ new Vue({
   	};
   	 var _this=this;
   	 //如果没有id，则返回
-  	 if(!accountId){
+  	 if(!openid){
 		return;
 		}
   	 
@@ -159,7 +159,7 @@ new Vue({
 	  method: 'post',
 	  url: '/signPrize/list',
 	  data:_this.Qs.stringify( {
-	     accountId:accountId
+		  openid:openid
 	  }),
 	}).then(function (res) {
 	    console.log(res.data);

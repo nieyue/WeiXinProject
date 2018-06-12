@@ -164,21 +164,22 @@ public class SignController extends BaseController<Sign,Long> {
 	@ApiImplicitParams({
 		@ApiImplicitParam(name="subscriptionId",value="公众号ID",dataType="long", paramType = "query",required=true),
 		@ApiImplicitParam(name="accountId",value="账户ID",dataType="long", paramType = "query"),
-		@ApiImplicitParam(name="wxOpenid",value="微信openid",dataType="string", paramType = "query"),
-		@ApiImplicitParam(name="wxUuid",value="微信uuid",dataType="string", paramType = "query")
+		@ApiImplicitParam(name="openid",value="微信openid",dataType="string", paramType = "query"),
+		@ApiImplicitParam(name="uuid",value="微信uuid",dataType="string", paramType = "query")
 	})
 	@RequestMapping(value = "/sign", method = {RequestMethod.GET,RequestMethod.POST})
 	public  StateResultList<List<Sign>> signSign(
 			@RequestParam(value="subscriptionId") Long subscriptionId,
 			@RequestParam(value="accountId",required=false) Long accountId,
-			@RequestParam(value="wxOpenid",required=false) String wxOpenid,
-			@RequestParam(value="wxUuid",required=false) String wxUuid,
+			@RequestParam(value="openid",required=false) String openid,
+			@RequestParam(value="uuid",required=false) String uuid,
 			HttpSession session)  {
+		
 		List<Sign> list=new ArrayList<>();
-		if(wxOpenid!=null){
-			 list = signService.openidSign(subscriptionId, wxOpenid);			
+		if(openid!=null){
+			 list = signService.openidSign(subscriptionId, openid);			
 		}else{
-			 list = signService.accountSign(subscriptionId, accountId, wxUuid);						
+			 list = signService.accountSign(subscriptionId, accountId, uuid);						
 		}
 		if(list.size()>0){
 			return ResultUtil.getSlefSRSuccessList(list);

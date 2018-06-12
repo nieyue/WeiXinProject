@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.ibatis.session.RowBounds;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -22,7 +21,6 @@ import com.nieyue.bean.SignPrize;
 import com.nieyue.bean.SignRecord;
 import com.nieyue.bean.Subscription;
 import com.nieyue.bean.ThirdInfo;
-import com.nieyue.dao.SignDao;
 import com.nieyue.exception.CommonRollbackException;
 import com.nieyue.service.AccountService;
 import com.nieyue.service.PrizeService;
@@ -35,8 +33,6 @@ import com.nieyue.util.DateUtil;
 import com.nieyue.util.MyDom4jUtil;
 @Service
 public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignService{
-	@Autowired
-	SignDao signDao;
 	@Autowired
 	SubscriptionService subscriptionService;
 	@Autowired
@@ -51,35 +47,19 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 	SignPrizeService signPrizeService;
 	@Override
 	public List<Sign> list(int pageNum, int pageSize, String orderName, String orderWay, Wrapper<Sign> wrapper) {
-				//分页
-				if(pageNum<1){//最小是逻辑1，实际0，
-					pageNum=1;
-				}
-				if(pageSize<1){
-					pageSize=0;
-				}
-				RowBounds rowBounds=new RowBounds(pageNum-1,pageSize);
-				//排序
-				if(wrapper==null){
-					wrapper=new EntityWrapper<>();
-				}
-				if(!StringUtils.isEmpty(orderName)&&!StringUtils.isEmpty(orderWay)){
-					if(orderWay.equals("asc")){
-						wrapper=wrapper.orderBy(orderName, true);
-						
-					}else if(orderWay.equals("desc")){
-						wrapper=wrapper.orderBy(orderName, false);
-					}
-				}
-				List<Sign> rl = signDao.selectPage(rowBounds, wrapper);
+				List<Sign> rl = super.list(pageNum, pageSize, orderName, orderWay, wrapper);
 				if(rl!=null&&rl.size()>0){
 			 		rl.forEach((a)->{
 			 			//公众号
+			 			if(!StringUtils.isEmpty(a.getSubscriptionId())){			 				
 			 			Subscription subscription = subscriptionService.load(a.getSubscriptionId());
 			 			a.setSubscription(subscription);
+			 			}
 			 			//账户
+			 			if(!StringUtils.isEmpty(a.getAccountId())){			 				
 			 			Account account = accountService.load(a.getAccountId());
 			 			a.setAccount(account);
+			 			}
 			 			
 			 		});
 				}
@@ -87,19 +67,23 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 	}
 	@Override
 	public Sign load(Long id) {
-		Sign a = signDao.selectById(id);
+		Sign a = super.load(id);
 		//公众号
-		Subscription subscription = subscriptionService.load(a.getSubscriptionId());
-		a.setSubscription(subscription);
-		//账户
-		Account account = accountService.load(a.getAccountId());
-		a.setAccount(account);
+			if(!StringUtils.isEmpty(a)&&!StringUtils.isEmpty(a.getSubscriptionId())){			 				
+			Subscription subscription = subscriptionService.load(a.getSubscriptionId());
+			a.setSubscription(subscription);
+			}
+			//账户
+			if(!StringUtils.isEmpty(a)&&!StringUtils.isEmpty(a.getSubscriptionId())){			 				
+			Account account = accountService.load(a.getAccountId());
+			a.setAccount(account);
+			}
 	 	return a;
 	}
 	
 	@Transactional(propagation=Propagation.REQUIRED)
 	@Override
-	public List<Sign> accountSign(Long subscriptionId, Long accountId, String wxUuid) {
+	public List<Sign> accountSign(Long subscriptionId, Long accountId, String uuid) {
 		//公众号
 		Subscription subscription = subscriptionService.load(subscriptionId);
 		if(subscription==null){
@@ -109,7 +93,7 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 		Wrapper<ThirdInfo> wrapper=new EntityWrapper<>();
 	 	Map<String,Object> map=new HashMap<String,Object>();
 	 	map.put("account_id", accountId);
-	 	map.put("wx_uuid", wxUuid);
+	 	map.put("wx_uuid", uuid);
 	 	Map<String, Object> nmap = MyDom4jUtil.getNoNullMap(map);
 	 	if(nmap.size()<=0){
 	 		throw new CommonRollbackException("最少一个参数");	 		
@@ -224,7 +208,7 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 	}
 	@Transactional(propagation=Propagation.REQUIRED)
 	@Override
-	public List<Sign> openidSign(Long subscriptionId,  String wxOpenid) {
+	public List<Sign> openidSign(Long subscriptionId,  String openid) {
 		//公众号
 		Subscription subscription = subscriptionService.load(subscriptionId);
 		if(subscription==null){
@@ -234,7 +218,7 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 		Wrapper<Sign> sw=new EntityWrapper<>();
 		Map<String,Object> swmap=new HashMap<String,Object>();
 		swmap.put("subscription_id", subscriptionId);
-		swmap.put("openid", wxOpenid);
+		swmap.put("openid", openid);
 		Map<String, Object> nswmap = MyDom4jUtil.getNoNullMap(swmap);
 		sw.allEq(nswmap);
 		List<Sign> signlist = this.list(1, 1, null, null, sw);
@@ -250,7 +234,7 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 			s.setDayNumber(1);//初始化连续天数
 			s.setIntegral(1.0);
 			s.setSubscriptionId(subscriptionId);
-			s.setOpenid(wxOpenid);
+			s.setOpenid(openid);
 			b = this.add(s);
 			list.add(s);
 			realDayNumber=1;
@@ -277,7 +261,7 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 			s.setUpdateDate(new Date());
 			s.setIntegral(s.getIntegral()+1);
 			s.setSubscriptionId(subscriptionId);
-			s.setOpenid(wxOpenid);
+			s.setOpenid(openid);
 			b = this.update(s);
 			list.add(s);
 		}
@@ -285,7 +269,7 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 			throw new CommonRollbackException("签到异常，请再次签到");
 		}
 		SignRecord signRecord=new SignRecord();
-		signRecord.setOpenid(wxOpenid);
+		signRecord.setOpenid(openid);
 		signRecord.setIntegral(1.0);
 		signRecord.setSignDate(new Date());
 		signRecord.setSubscriptionId(subscriptionId);
@@ -325,7 +309,7 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 				sp.setStatus(1);//状态，1申请领奖，2领取成功，3拒绝发送
 				sp.setSubscriptionId(subscriptionId);
 				sp.setPrizeId(p.getPrizeId());
-				sp.setOpenid(wxOpenid);
+				sp.setOpenid(openid);
 				signPrizeService.add(sp);
 			});
 		}

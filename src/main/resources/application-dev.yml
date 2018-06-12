@@ -14,17 +14,30 @@ server:
  # connection-timeout: 60
  
 spring:
-   datasource: 
+  datasource: 
     name: master
     driver-class-name: com.mysql.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/wei_xin_project_db
     username: root
     password: liliu 
+  redis:
+    host: 127.0.0.1 
+    password: liliu
+    port: 6379
+    database: 1
+    timeout: 3000
+    pool:
+      min-idle: 100
+      max-idle: 300
+      max-active: 800 
 myPugin: 
   session: 
     myDomainName: null
   projectName: WeiXinProject
   projectDomainUrl: http://127.0.0.1:8080
+  shiro: 
+    anon: 
+      locations: / , /swagger-resources/** , /swagger-ui.html , /webjars/** , /v2/** , /home/** , /resources/** , /tool/** ,/account/login
   alibaba: 
     alipay:
       APP_ID: 2018011501882345 

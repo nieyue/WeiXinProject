@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.ibatis.session.RowBounds;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -17,18 +16,15 @@ import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.nieyue.bean.Account;
 import com.nieyue.bean.Role;
 import com.nieyue.bean.ThirdInfo;
-import com.nieyue.dao.AccountDao;
-import com.nieyue.dao.RoleDao;
 import com.nieyue.service.AccountService;
+import com.nieyue.service.RoleService;
 import com.nieyue.service.ThirdInfoService;
 import com.nieyue.util.MyDESutil;
 import com.nieyue.util.MyDom4jUtil;
 @Service
 public class AccountServiceImpl extends BaseServiceImpl<Account,Long> implements AccountService{
 	@Autowired
-	AccountDao accountDao;
-	@Autowired
-	RoleDao roleDao;
+	RoleService roleService;
 	@Autowired
 	ThirdInfoService thirdInfoService;
 	/**
@@ -41,20 +37,21 @@ public class AccountServiceImpl extends BaseServiceImpl<Account,Long> implements
 	 	Map<String,Object> map=new HashMap<String,Object>();
 	 	map.put("phone", adminName);
 	 	map.put("password", MyDESutil.getMD5(password));
-	 	map.put("accountId", accountId);
+	 	map.put("account_id", accountId);
 	 	wrapper.allEq(MyDom4jUtil.getNoNullMap(map));
 	 	Map<String,Object> map2=new HashMap<String,Object>();
 	 	map2.put("email", adminName);
 	 	map2.put("password", MyDESutil.getMD5(password));
-	 	map2.put("accountId", accountId);
-	 	wrapper.or().allEq(MyDom4jUtil.getNoNullMap(map2));
-	 	List<Account> al = accountDao.selectList(wrapper);
+	 	map2.put("account_id", accountId);
+	 	wrapper.orNew().allEq(MyDom4jUtil.getNoNullMap(map2));
+	 	//wrapper.or().allEq(MyDom4jUtil.getNoNullMap(map2));
+	 	List<Account> al = super.list(1,1,null,null,wrapper);
 	 	if(al.size()>0){
 	 		account=al.get(0);
- 			Role role = roleDao.selectById(account.getRoleId());
+ 			Role role = roleService.load(account.getRoleId());
  			account.setRole(role);
  			account.setLoginDate(new Date());
- 			accountDao.updateById(account);
+ 			super.update(account);
 	 	}
 	 	return account;
 	}
@@ -71,40 +68,22 @@ public class AccountServiceImpl extends BaseServiceImpl<Account,Long> implements
 	}
 	@Override
 	public List<Account> list(int pageNum, int pageSize, String orderName, String orderWay, Wrapper<Account> wrapper) {
-				//分页
-				if(pageNum<1){//最小是逻辑1，实际0，
-					pageNum=1;
-				}
-				if(pageSize<1){
-					pageSize=0;
-				}
-				RowBounds rowBounds=new RowBounds(pageNum-1,pageSize);
-				//排序
-				if(wrapper==null){
-					wrapper=new EntityWrapper<>();
-				}
-				if(!StringUtils.isEmpty(orderName)&&!StringUtils.isEmpty(orderWay)){
-					if(orderWay.equals("asc")){
-						wrapper=wrapper.orderBy(orderName, true);
-						
-					}else if(orderWay.equals("desc")){
-						wrapper=wrapper.orderBy(orderName, false);
-					}
-				}
-				List<Account> rl = accountDao.selectPage(rowBounds, wrapper);
+				List<Account> rl = super.list(pageNum, pageSize, orderName, orderWay, wrapper);
 				if(rl!=null&&rl.size()>0){
 			 		rl.forEach((a)->{
-			 			Role role = roleDao.selectById(a.getRoleId());
+			 			Role role = roleService.load(a.getRoleId());
 			 			a.setRole(role);
 			 		});
 				}
 				return rl;
 	}
 	@Override
-	public Account load(Long id) {
-		Account a = accountDao.selectById(id);
-		Role role = roleDao.selectById(a.getRoleId());
+	public Account load(Long accountId) {
+		Account a =super.load(accountId);
+		if(!StringUtils.isEmpty(a)){			
+		Role role =roleService.load(a.getRoleId());
 		a.setRole(role);
+		}
 	 	return a;
 	}
 	
