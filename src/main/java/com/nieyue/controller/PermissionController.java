@@ -21,7 +21,6 @@ import com.nieyue.bean.Permission;
 import com.nieyue.service.PermissionService;
 import com.nieyue.util.MyDom4jUtil;
 import com.nieyue.util.ResultUtil;
-import com.nieyue.util.StateResult;
 import com.nieyue.util.StateResultList;
 
 import io.swagger.annotations.Api;
@@ -85,9 +84,12 @@ public class PermissionController extends BaseController<Permission,Long> {
 	 */
 	@ApiOperation(value = "初始化权限", notes = "初始化权限")
 	@RequestMapping(value = "/init", method = {RequestMethod.GET,RequestMethod.POST})
-	public @ResponseBody StateResult initPermission()  {
+	public @ResponseBody StateResultList<List<Permission>> initPermission()  {
 		boolean um = permissionService.initPermission();
-		return ResultUtil.getSR(um);
+		if(um){
+			return ResultUtil.getSlefSRSuccessList(null);
+		}
+		return ResultUtil.getSlefSRList(40000, "已经是最新，不需更新", null);
 	}
 	/**
 	 * 权限修改

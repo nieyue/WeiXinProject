@@ -68,8 +68,8 @@ public class RolePermissionController extends BaseController<RolePermission,Long
 			Wrapper<RolePermission> wrapper=new EntityWrapper<>();
 		 	Map<String,Object> map=new HashMap<>();
 		 	map.put("region", region);
-		 	map.put("roleId", roleId);
-		 	map.put("permissionId", permissionId);
+		 	map.put("role_id", roleId);
+		 	map.put("permission_id", permissionId);
 		 	wrapper.allEq(MyDom4jUtil.getNoNullMap(map));
 			StateResultList<List<RolePermission>> rl = super.list(pageNum, pageSize, orderName, orderWay,wrapper);
 			return rl;
