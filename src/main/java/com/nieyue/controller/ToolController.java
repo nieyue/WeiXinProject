@@ -3,14 +3,19 @@ package com.nieyue.controller;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.websocket.server.PathParam;
 
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,13 +23,21 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.baomidou.mybatisplus.mapper.Wrapper;
+import com.nieyue.bean.Subscription;
+import com.nieyue.business.WeiXinMpBusiness;
+import com.nieyue.service.SubscriptionService;
 import com.nieyue.util.DateUtil;
 import com.nieyue.util.FileUploadUtil;
+import com.nieyue.util.MyDom4jUtil;
 import com.nieyue.util.ThumbnailatorUtils;
 import com.nieyue.verification.VerificationCode;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import me.chanjar.weixin.common.exception.WxErrorException;
+import me.chanjar.weixin.mp.api.WxMpService;
 
 
 
@@ -43,6 +56,10 @@ public class ToolController {
 	String rootPath;
 	@Value("${uploaderPath.locationPath}")
 	String locationPath;
+	@Autowired
+	private WeiXinMpBusiness weiXinMpBusiness;
+	@Autowired
+	private SubscriptionService subscriptionService;
 	/**
 	 * 验证码
 	 * @param date
@@ -126,5 +143,42 @@ public class ToolController {
 		return session.getId();
 		
 	}
+	/**
+	 * 微信门户
+	 * @return
+	 */
+	@RequestMapping(value = "/weixin/portal/{appid}", method = {RequestMethod.GET,RequestMethod.POST})
+	public String weixinPortal(
+			@RequestParam(name = "signature",required = false) String signature,
+			@RequestParam(name = "timestamp", required = false) String timestamp,
+			@RequestParam(name = "nonce", required = false) String nonce,
+			@RequestParam(name = "echostr", required = false) String echostr,
+			@PathVariable(value="appid") String appid,
+			HttpSession	 session
+			){
+		
+	    if (StringUtils.isAnyBlank(signature, timestamp, nonce, echostr)) {
+	      throw new IllegalArgumentException("请求参数非法，请核实!");
+	    }
+	    Wrapper<Subscription> wrapper=new EntityWrapper<Subscription>();
+ 		Map<String,Object> map=new HashMap<String,Object>();
+ 		map.put("appid", appid);
+ 		wrapper.allEq(MyDom4jUtil.getNoNullMap(map));
+ 		List<Subscription> sl = subscriptionService.list(1, 1, null, null, wrapper);
+	   if(sl.size()>0){
+		   Subscription s = sl.get(0);
+		   WxMpService wxMpService;
+		try {
+			wxMpService = weiXinMpBusiness.init(s.getAppid(), s.getAppsecret(), s.getToken(), null);
+			if (wxMpService.checkSignature(timestamp, nonce, signature)) {
+				return echostr;
+			}		   
+		} catch (WxErrorException e) {
+			// TODO Auto-generated catch block
+			return "非法请求";
+		}
+	   }
+	    return "非法请求";
+	  }
 	
 }

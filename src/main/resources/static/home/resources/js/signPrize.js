@@ -1,4 +1,5 @@
 //axios.defaults.baseURL = '/';
+
 axios.defaults.headers['Content-Type'] = 'application/x-www-form-urlencoded';
 Vue.prototype.Qs=Qs;
 Vue.prototype.getQueryString=function (name)
@@ -110,6 +111,7 @@ methods:{
 		  			value:'提交成功'
   			    	};
   			    signPrize.status=2;
+  			  _this.$Message.success('提交成功');
 		  		//this.loadingToast.isshow=false;
 		  		//this.$emit("show-loading-toast",this.loadingToast)
 		  		//console.log(this.loadingToast)  	
@@ -118,6 +120,7 @@ methods:{
   				  			isshow:true,
   				  			value:'提交失败'
   		  			    	};
+  			    	_this.$Message.error('提交失败');
   			    }
   			    
   			  })
@@ -131,10 +134,94 @@ methods:{
 new Vue({
   el: '#app',
   data: {
-	  signPrizeList:[]
-	 
+	  signPrizeList:[],
+	  //三级联动数据
+      threeCityData:threeCity.getThreeCity(),
+      //更新的接受省、市、区
+      updateProvinceCityArea:[],
+    //修改参数
+	updateReceiptInfoModel:false,
+	updateLoading:false,
+	updateReceiptInfoRules: {
+      phone: [
+          {required: true, message: '注册手机号为必填项', trigger: 'blur'}
+          ]
+      },
+	updateReceiptInfo:{},
   },
   methods:{
+	  //更新中的二级联动省和市
+	  updateProvinceAndCityAndArea:function(value,label){
+        this.updateReceiptInfo.province=label[0].label
+        this.updateReceiptInfo.city=label[1].label
+        this.updateReceiptInfo.area=label[2].label
+    },
+    //显示收货地址
+    showReceiptInfo:function(){
+    	console.log(111)
+    	var _this=this;
+    	this.updateReceiptInfoModel = true
+    	 axios( {
+    		  method: 'post',
+    		  url: '/receiptInfo/list',
+    		  data:_this.Qs.stringify( {
+    			  openid:openid
+    		  }),
+    		}).then(function (res) {
+    		    console.log(res.data);
+    		    if(res.data.code==200){
+    		    	_this.updateReceiptInfo=res.data.data[0];
+    		    	var province=_this.updateReceiptInfo.province;
+    		    	var city=_this.updateReceiptInfo.city;
+    		    	var area=_this.updateReceiptInfo.area;
+    		    	_this.updateProvinceCityArea=threeCity.getValueByLabel(province,city,area)
+    		    	console.log(_this.updateProvinceCityArea)
+    		    }else{
+    		    	console.log(res.data.msg)
+    		    }
+    		    
+    		  })
+    		  .catch(function (error) {
+    		    console.log(error);
+    		  });
+    },
+  //修改取消
+	 updateCancel:function() {
+		 if (!this.updateLoading) {
+		   this.updateReceiptInfoModel = false
+		  // this.$refs.updateReceiptInfo.resetFields()
+		 }
+	},
+	//修改确定
+    updateSure:function() {
+    	var _this=this;
+    	_this.updateReceiptInfo.openid=openid
+    	if(/^1[0-9]{10}$/.test(_this.updateReceiptInfo.phone)==false){
+    		_this.$Message.error('手机号格式不对');
+    		return ;
+    	}
+   	 axios( {
+   		  method: 'post',
+   		  url: '/receiptInfo/openidAdd',
+   		  data:_this.Qs.stringify(_this.updateReceiptInfo),
+   		}).then(function (res) {
+   		    console.log(res.data);
+   		    if(res.data.code==200){
+   		    	_this.$Message.success('提交成功');
+   		    	_this.updateReceiptInfo=res.data.data[0];	
+   		    }else{
+   		    	console.log(res.data.msg)
+   		    	_this.$Message.error('提交失败');
+   		    }
+   		 _this.updateReceiptInfoModel = false
+   		    
+   		  })
+   		  .catch(function (error) {
+   			_this.updateReceiptInfoModel = false
+   			_this.$Message.error('提交异常失败');
+   		  });
+ 
+    },
 	 //获取列表
   	getSignPrizeList:function(){
   	var signPrize={
@@ -165,10 +252,7 @@ new Vue({
 	    console.log(res.data);
 	    if(res.data.code==200){
 	    	_this.signPrizeList=res.data.data;	
-	    /*	setInterval(function(){
-	    		_this.signPrizeList.push(signPrize);	 
-	    		
-	    	},1000)*/
+	    	
 	    }else{
 	    	console.log(res.data.msg)
 	    }
@@ -187,6 +271,9 @@ new Vue({
   	}
   },
   created:function(){
-  this.getSignPrizeList();
+	  //this.$Spin.show();
+	  this.getSignPrizeList();
+	  //this.$Spin.hide();
+	  document.querySelector("html").style.display="block";
   }
 });

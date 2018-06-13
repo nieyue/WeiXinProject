@@ -8,6 +8,7 @@ import java.util.Map;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
 
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -19,7 +20,9 @@ import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.nieyue.bean.ReceiptInfo;
 import com.nieyue.exception.CommonNotRollbackException;
+import com.nieyue.exception.CommonRollbackException;
 import com.nieyue.service.ReceiptInfoService;
+import com.nieyue.service.SignService;
 import com.nieyue.util.MyDom4jUtil;
 import com.nieyue.util.StateResultList;
 
@@ -39,6 +42,8 @@ import io.swagger.annotations.ApiOperation;
 public class ReceiptInfoController extends BaseController<ReceiptInfo, Long> {
 	@Resource
 	private ReceiptInfoService receiptInfoService;
+	@Resource
+	private SignService signService;
 
 	/**
 	 * 收货信息分页浏览
@@ -103,6 +108,52 @@ public class ReceiptInfoController extends BaseController<ReceiptInfo, Long> {
 	@ApiOperation(value = "收货信息增加", notes = "收货信息增加")
 	@RequestMapping(value="/add", method={RequestMethod.GET,RequestMethod.POST})
 	public @ResponseBody StateResultList<List<ReceiptInfo>> addReceiptInfo(@ModelAttribute ReceiptInfo receiptInfo, HttpSession session) {
+		receiptInfo.setCreateDate(new Date());
+		receiptInfo.setUpdateDate(new Date());
+		StateResultList<List<ReceiptInfo>> a = super.add(receiptInfo);
+		return a;
+	}
+	/**
+	 * openid收货信息增加
+	 * @return 
+	 */
+	@ApiOperation(value = "openid收货信息增加", notes = "openid收货信息增加")
+	@RequestMapping(value="/openidAdd", method={RequestMethod.GET,RequestMethod.POST})
+	public @ResponseBody StateResultList<List<ReceiptInfo>> openidAddReceiptInfo(@ModelAttribute ReceiptInfo receiptInfo, HttpSession session) {
+	
+		if(StringUtils.isEmpty(receiptInfo.getName())){
+			throw new CommonRollbackException("姓名是必须的");
+		}
+		if(StringUtils.isEmpty(receiptInfo.getPhone())){
+			throw new CommonRollbackException("手机号是必须的");
+		}
+		if(StringUtils.isEmpty(receiptInfo.getProvince())){
+			throw new CommonRollbackException("省是必须的");
+		}
+		if(StringUtils.isEmpty(receiptInfo.getCity())){
+			throw new CommonRollbackException("城市是必须的");
+		}
+		if(StringUtils.isEmpty(receiptInfo.getArea())){
+			throw new CommonRollbackException("地区是必须的");
+		}
+		if(StringUtils.isEmpty(receiptInfo.getAddress())){
+			throw new CommonRollbackException("地址是必须的");
+		}
+		
+		if(StringUtils.isEmpty(receiptInfo.getOpenid())){
+			throw new CommonRollbackException("openid是必须的");
+		}else{
+			Wrapper<ReceiptInfo> wrapper = new EntityWrapper<>();
+			Map<String, Object> map = new HashMap<>();
+			map.put("openid", receiptInfo.getOpenid());
+			wrapper.allEq(MyDom4jUtil.getNoNullMap(map));
+			List<ReceiptInfo> rl = receiptInfoService.list(1, 1, null, null, wrapper);
+			if(rl.size()>0){
+				//已经有了就更新
+				StateResultList<List<ReceiptInfo>> c = super.update(receiptInfo);
+				return c;
+			}
+		}
 		receiptInfo.setCreateDate(new Date());
 		receiptInfo.setUpdateDate(new Date());
 		StateResultList<List<ReceiptInfo>> a = super.add(receiptInfo);

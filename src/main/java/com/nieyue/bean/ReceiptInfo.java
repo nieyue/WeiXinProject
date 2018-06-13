@@ -78,12 +78,12 @@ public class ReceiptInfo implements Serializable{
 	 *微信openid,外键
 	 */
 	@ApiModelProperty(value="微信openid,外键",example="微信openid,外键")
-	private Integer openid;
+	private String openid;
 	/**
 	 * 账户Id
 	 */
 	@ApiModelProperty(value="账户Id",example="账户Id")
-	private Integer accountId;
+	private Long accountId;
 	public Long getReceiptInfoId() {
 		return receiptInfoId;
 	}
@@ -144,16 +144,16 @@ public class ReceiptInfo implements Serializable{
 	public void setUpdateDate(Date updateDate) {
 		this.updateDate = updateDate;
 	}
-	public Integer getOpenid() {
+	public String getOpenid() {
 		return openid;
 	}
-	public void setOpenid(Integer openid) {
+	public void setOpenid(String openid) {
 		this.openid = openid;
 	}
-	public Integer getAccountId() {
+	public Long getAccountId() {
 		return accountId;
 	}
-	public void setAccountId(Integer accountId) {
+	public void setAccountId(Long accountId) {
 		this.accountId = accountId;
 	}
 	public static long getSerialversionuid() {

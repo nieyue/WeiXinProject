@@ -5,8 +5,13 @@
     <meta name="viewport"
 	content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
 	<title>我的奖品</title>
-	<link href="resources/css/bootstrap.min.css" rel="stylesheet">
+	<link href="resources/css/bootstrap.min.css" rel="stylesheet"/>
+<link rel="stylesheet" href="//unpkg.com/iview/dist/styles/iview.css">
+
 	<link href="resources/css/prize.css" rel="stylesheet"/>
+	<script>
+	document.querySelector("html").style.display="none";
+	</script>
     <style>
     /**
     **openid
@@ -199,11 +204,85 @@
         margin:5% 2% 8% 2%;
     }
     .activewrap-p{width: 90%;margin: 0.1rem 0 0 1rem;}
+    /**
+    **收货信息
+    */
+    .receipt-info-alert{
+    color:#fff;
+    float:left;
+    width:80%;
+    font-size:0.8rem;
+    text-indent:1rem;
+    line-height:50px;
+    text-align:center;
+    }
+    .receipt-info-wrap{
+    color:#fff;
+    float:right;
+    width:10%;
+    text-align:center;
+    }
+    .receipt-info-wrap .ivu-icon{
+   font-size:2rem;
+    }
+    .receipt-info-wrap .receipt-info-text{
+   font-size:0.5rem;
+    }
+    .form-item{
+    width:100%;
+    margin:8px 0;
+    display:block;
+    }
+    .form-item input{
+    width:100%;
+    height:32px;
+    display:block;
+    border:1px solid #ececec;
+    padding-left:1rem;
+    }
     </style>
 </head>
 <body>
      <!--背景 -->
 	<div class="bgwrap" id="app">
+		<!--  <Cascader :data="data" v-model="value1"></Cascader> -->
+		<a href="#">&nbsp;</a>
+		<div class="receipt-info-alert">温馨提示：右边的收货地址是收货必填项</div>
+		<div class="receipt-info-wrap" @click="showReceiptInfo()">
+		 <Icon type="android-clipboard" ></Icon>
+		 <div class="receipt-info-text" >收货地址</div>
+		</div>
+	     <Modal v-model="updateReceiptInfoModel"
+	           title="修改收货地址"
+	           :closable="false"
+	           :mask-closable="false"
+	    >
+	      <Form ref="updateReceiptInfo"  :model="updateReceiptInfo" :label-width="100" label-position="right"  :rules="updateReceiptInfoRules">
+	        <FormItem prop="name" class="form-item" label="姓名:">
+	          <Input type="text" v-model="updateReceiptInfo.name" placeholder="姓名">
+	          </Input>
+	        </FormItem>
+	        <FormItem prop="phone" class="form-item" class="form-item"  label="手机号:">
+	          <Input type="text" v-model="updateReceiptInfo.phone" placeholder="手机号">
+	          </Input>
+	        </FormItem>
+	         <FormItem prop="updateProvinceCityArea" label="省/市/区:">
+	          <Cascader :data="threeCityData"  @on-change="updateProvinceAndCityAndArea" v-model="updateProvinceCityArea" trigger="hover"></Cascader>
+	        </FormItem>
+	        <FormItem prop="address" class="form-item"  label="收货地址:">
+	          <Input type="text" v-model="updateReceiptInfo.address" placeholder="收货地址">
+	          </Input>
+	        </FormItem>
+	      </Form>
+	      <div slot='footer'>
+	        <Button type='ghost' class="btn btn-warning" @click='updateCancel'>取消</Button>
+	        <Button type='primary' class="btn btn-danger" :loading='updateLoading'>
+	          <span v-if="!updateLoading"  @click='updateSure'>确定</span>
+	          <span v-else>Loading...</span>
+	        </Button>
+	      </div>
+	    </Modal>
+		
         <div class="bgwrap-div">
             <img  class="bgwrap-div-img" src="resources/img/prize/bg_03.jpg" alt="">
             <div>
@@ -217,11 +296,12 @@
                 </div>
             </div>
         </div>
-        
     </div>
 <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+<script src="//unpkg.com/iview/dist/iview.min.js"></script>
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script src="https://cdn.bootcss.com/qs/6.5.2/qs.min.js"></script>
+<script src="resources/js/threeCity.js"></script>
 <script src="resources/js/signPrize.js"></script>
 <script>
 </script>

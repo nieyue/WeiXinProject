@@ -16,7 +16,7 @@ import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.nieyue.bean.KfArticle;
 import com.nieyue.bean.KfMessage;
 import com.nieyue.bean.Subscription;
-import com.nieyue.business.WeXinMpBusiness;
+import com.nieyue.business.WeiXinMpBusiness;
 import com.nieyue.exception.CommonRollbackException;
 import com.nieyue.service.KfArticleService;
 import com.nieyue.service.KfMessageService;
@@ -28,7 +28,7 @@ import net.sf.json.JSONObject;
 @Service
 public class KfMessageServiceImpl extends BaseServiceImpl<KfMessage,Long> implements KfMessageService{
 	@Autowired
-	WeXinMpBusiness weXinMpBusiness;
+	WeiXinMpBusiness weiXinMpBusiness;
 	@Autowired
 	SubscriptionService subscriptionService;
 	@Autowired
@@ -55,9 +55,9 @@ public class KfMessageServiceImpl extends BaseServiceImpl<KfMessage,Long> implem
 		}
 		try {
 			//初始化公众号
-			weXinMpBusiness.init(subscription.getAppid(), subscription.getAppsecret(), subscription.getToken(), "aes");
+			weiXinMpBusiness.init(subscription.getAppid(), subscription.getAppsecret(), subscription.getToken(), "aes");
 			//获取所有账户			
-			List<String> openidList=weXinMpBusiness.getOpenidList();
+			List<String> openidList=weiXinMpBusiness.getOpenidList();
 			//如果是图文
 			List<KfArticle> kfArticleList = null;
 			if(kfMessage.getMsgtype().equals("news")){				
@@ -67,7 +67,7 @@ public class KfMessageServiceImpl extends BaseServiceImpl<KfMessage,Long> implem
 		 	wrapper.allEq(MyDom4jUtil.getNoNullMap(map));
 		 	kfArticleList = kfArticleService.list(1, Integer.MAX_VALUE, "updateDate", "desc", wrapper);
 			}
-			weXinMpBusiness.sendWxMpKefuMessage(openidList, kfMessage, kfArticleList);
+			weiXinMpBusiness.sendWxMpKefuMessage(openidList, kfMessage, kfArticleList);
 		} catch (WxErrorException e) {
 			if(JSONObject.fromObject(e.getMessage()).get("errcode").equals(45015)){
 				//throw new CommonRollbackException("该用户不活跃");
