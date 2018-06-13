@@ -7,6 +7,8 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.baomidou.mybatisplus.mapper.Wrapper;
@@ -26,7 +28,7 @@ import com.nieyue.util.StateResultList;
 public class BaseController<T,ID> {
 	@Autowired
 	private BaseService<T,ID> baseService;
-	
+    Logger logger=	LoggerFactory.getLogger(getT());
 
 	/**
 	 * 获取类型名。再首字母转小写
@@ -38,6 +40,16 @@ public class BaseController<T,ID> {
 		 String s3 = s1.toLowerCase();  
 		 String s4 = s3.concat(s2);  
 		return s4;
+	}
+	/**
+	 * 获取类类型
+	 */
+	Class<ID> getID(){
+		Type genType = getClass().getGenericSuperclass();  
+		Type[] params = ((ParameterizedType) genType).getActualTypeArguments();  
+		@SuppressWarnings("unchecked")
+		Class<ID> entityClass = (Class<ID>) params[0];
+		return entityClass;
 	}
 	/**
 	 * 获取类类型
