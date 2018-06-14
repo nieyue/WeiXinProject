@@ -8,6 +8,7 @@ import java.util.Map;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -17,7 +18,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
+import com.baomidou.mybatisplus.toolkit.StringUtils;
 import com.nieyue.bean.Subscription;
+import com.nieyue.business.WeiXinMpBusiness;
+import com.nieyue.exception.CommonRollbackException;
 import com.nieyue.service.SubscriptionService;
 import com.nieyue.util.MyDom4jUtil;
 import com.nieyue.util.StateResultList;
@@ -26,6 +30,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import me.chanjar.weixin.common.exception.WxErrorException;
 
 
 /**
@@ -39,6 +44,8 @@ import io.swagger.annotations.ApiOperation;
 public class SubscriptionController extends BaseController<Subscription,Long> {
 	@Resource
 	private SubscriptionService subscriptionService;
+	@Autowired
+	WeiXinMpBusiness weiXinMpBusiness;
 	
 	/**
 	 * 公众号分页浏览
@@ -75,8 +82,27 @@ public class SubscriptionController extends BaseController<Subscription,Long> {
 	@ApiOperation(value = "公众号修改", notes = "公众号修改")
 	@RequestMapping(value = "/update", method = {RequestMethod.GET,RequestMethod.POST})
 	public @ResponseBody StateResultList<List<Subscription>> update(@ModelAttribute Subscription subscription,HttpSession session)  {
+		if(StringUtils.isEmpty(subscription.getAppid())){
+			throw new CommonRollbackException("appid必填");
+		}
+		Wrapper<Subscription> wrapper=new EntityWrapper<Subscription>();
+		Map<String,Object> map=new HashMap<String,Object>();
+	 	map.put("appid", subscription.getAppid());
+	 	wrapper.allEq(MyDom4jUtil.getNoNullMap(map));
+		List<Subscription> s = subscriptionService.list(1, 1, null, null, wrapper);
+		if(s.size()>0 && !s.get(0).getSubscriptionId().equals(subscription.getSubscriptionId())){
+			throw new CommonRollbackException("appid已经存在");
+		}
 		subscription.setUpdateDate(new Date());
 		StateResultList<List<Subscription>> u = super.update(subscription);
+		if(u.getCode()==200){
+			try {
+				//更新内存中的
+				weiXinMpBusiness.initupdate(subscription.getAppid(), subscription.getAppsecret(), subscription.getToken(), "aes");
+			} catch (WxErrorException e) {
+				
+			}
+		}
 		return u;
 	}
 	/**
@@ -86,9 +112,28 @@ public class SubscriptionController extends BaseController<Subscription,Long> {
 	@ApiOperation(value = "公众号增加", notes = "公众号增加")
 	@RequestMapping(value = "/add", method = {RequestMethod.GET,RequestMethod.POST})
 	public @ResponseBody StateResultList<List<Subscription>> add(@ModelAttribute Subscription subscription, HttpSession session) {
+		if(StringUtils.isEmpty(subscription.getAppid())){
+			throw new CommonRollbackException("appid必填");
+		}
+		Wrapper<Subscription> wrapper=new EntityWrapper<Subscription>();
+		Map<String,Object> map=new HashMap<String,Object>();
+	 	map.put("appid", subscription.getAppid());
+	 	wrapper.allEq(MyDom4jUtil.getNoNullMap(map));
+		int n = subscriptionService.count(wrapper);
+		if(n>0){
+			throw new CommonRollbackException("appid已经存在");
+		}
 		subscription.setCreateDate(new Date());
 		subscription.setUpdateDate(new Date());
 		StateResultList<List<Subscription>> a = super.add(subscription);
+		if(a.getCode()==200){
+			try {
+				//更新内存中的
+				weiXinMpBusiness.init(subscription.getAppid(), subscription.getAppsecret(), subscription.getToken(), "aes");
+			} catch (WxErrorException e) {
+				
+			}
+		}
 		return a;
 	}
 	/**
@@ -102,6 +147,15 @@ public class SubscriptionController extends BaseController<Subscription,Long> {
 	@RequestMapping(value = "/delete", method = {RequestMethod.GET,RequestMethod.POST})
 	public @ResponseBody StateResultList<List<Subscription>> delete(@RequestParam("subscriptionId") Long subscriptionId,HttpSession session)  {
 		StateResultList<List<Subscription>> d = super.delete(subscriptionId);
+		if(d.getCode()==200){
+			Subscription s = d.getData().get(0);
+			try {
+				//更新内存中的
+				weiXinMpBusiness.initdelete(s.getAppid(), s.getAppsecret(), s.getToken(), "aes");
+			} catch (WxErrorException e) {
+				
+			}
+		}
 		return d;
 	}
 	/**

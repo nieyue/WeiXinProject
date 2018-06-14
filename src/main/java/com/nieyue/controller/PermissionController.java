@@ -2,8 +2,10 @@ package com.nieyue.controller;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
@@ -50,9 +52,9 @@ public class PermissionController extends BaseController<Permission,Long> {
 	@ApiOperation(value = "权限列表", notes = "权限分页浏览")
 	@ApiImplicitParams({
 	  @ApiImplicitParam(name="type",value="权限类型，默认0开放，1鉴权",dataType="int", paramType = "query"),
-	  @ApiImplicitParam(name="managerName",value="权限管理名",dataType="string", paramType = "query"),
-	  @ApiImplicitParam(name="name",value="权限名",dataType="string", paramType = "query"),
-	  @ApiImplicitParam(name="route",value="权限路由",dataType="string", paramType = "query"),
+	  @ApiImplicitParam(name="managerName",value="权限管理名，模糊查询",dataType="string", paramType = "query"),
+	  @ApiImplicitParam(name="name",value="权限名，模糊查询",dataType="string", paramType = "query"),
+	  @ApiImplicitParam(name="route",value="权限路由，模糊查询",dataType="string", paramType = "query"),
 	  @ApiImplicitParam(name="pageNum",value="页头数位",dataType="int", paramType = "query",defaultValue="1"),
 	  @ApiImplicitParam(name="pageSize",value="每页数目",dataType="int", paramType = "query",defaultValue="10"),
 	  @ApiImplicitParam(name="orderName",value="排序字段",dataType="string", paramType = "query",defaultValue="permissionId"),
@@ -71,10 +73,17 @@ public class PermissionController extends BaseController<Permission,Long> {
 			Wrapper<Permission> wrapper=new EntityWrapper<>();
 		 	Map<String,Object> map=new HashMap<>();
 		 	map.put("type", type);
-		 	map.put("manager_name", managerName);
-		 	map.put("name", name);
-		 	map.put("route", route);
 		 	wrapper.allEq(MyDom4jUtil.getNoNullMap(map));
+		 	Map<String,Object> map2=new HashMap<>();
+		 	map2.put("manager_name", managerName);
+		 	map2.put("name", name);
+		 	map2.put("route", route);
+		 	Map<String, Object> nmap2 = MyDom4jUtil.getNoNullMap(map2);
+		 	Iterator<Entry<String, Object>> iterator = nmap2.entrySet().iterator();
+		 	while ( iterator.hasNext()) {
+		 		Entry<String, Object> entry = iterator.next();
+		 		wrapper.andNew().like(entry.getKey(), (String) entry.getValue());
+			}
 			StateResultList<List<Permission>> rl = super.list(pageNum, pageSize, orderName, orderWay,wrapper);
 			return rl;
 	}
@@ -133,9 +142,9 @@ public class PermissionController extends BaseController<Permission,Long> {
 	@ApiOperation(value = "权限数量", notes = "权限数量查询")
 	@ApiImplicitParams({
 			@ApiImplicitParam(name="type",value="权限类型，默认0开放，1鉴权",dataType="int", paramType = "query"),
-			@ApiImplicitParam(name="managerName",value="权限管理名",dataType="string", paramType = "query"),
-			@ApiImplicitParam(name="name",value="权限名",dataType="string", paramType = "query"),
-			@ApiImplicitParam(name="route",value="权限路由",dataType="string", paramType = "query")
+			@ApiImplicitParam(name="managerName",value="权限管理名，模糊查询",dataType="string", paramType = "query"),
+			@ApiImplicitParam(name="name",value="权限名，模糊查询",dataType="string", paramType = "query"),
+			@ApiImplicitParam(name="route",value="权限路由，模糊查询",dataType="string", paramType = "query")
 	})
 	@RequestMapping(value = "/count", method = {RequestMethod.GET,RequestMethod.POST})
 	public @ResponseBody StateResultList<List<Integer>> count(
@@ -147,10 +156,17 @@ public class PermissionController extends BaseController<Permission,Long> {
 		Wrapper<Permission> wrapper=new EntityWrapper<>();
 	 	Map<String,Object> map=new HashMap<String,Object>();
 	 	map.put("type", type);
-	 	map.put("manager_name", managerName);
-	 	map.put("name", name);
-	 	map.put("route", route);
 	 	wrapper.allEq(MyDom4jUtil.getNoNullMap(map));
+	 	Map<String,Object> map2=new HashMap<>();
+	 	map2.put("manager_name", managerName);
+	 	map2.put("name", name);
+	 	map2.put("route", route);
+	 	Map<String, Object> nmap2 = MyDom4jUtil.getNoNullMap(map2);
+	 	Iterator<Entry<String, Object>> iterator = nmap2.entrySet().iterator();
+	 	while ( iterator.hasNext()) {
+	 		Entry<String, Object> entry = iterator.next();
+	 		wrapper.andNew().like(entry.getKey(), (String) entry.getValue());
+		}
 		StateResultList<List<Integer>> c = super.count(wrapper);
 		return c;
 	}

@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.nieyue.bean.Subscription;
+import com.nieyue.exception.CommonRollbackException;
 import com.nieyue.service.SubscriptionService;
 import com.nieyue.util.MyDom4jUtil;
 
@@ -46,8 +47,11 @@ public class SubscriptionBusiness {
 			try {
 				wxMpService = weiXinMpBusiness.init(s.getAppid(), s.getAppsecret(), s.getToken(), "aes");
 			} catch (WxErrorException e) {
-			return wxMpService;
+				throw new CommonRollbackException("appid错误");
 			}
+		   }
+		   if(wxMpService==null){
+			   throw new CommonRollbackException("appid错误");					
 		   }
 		   return wxMpService;
 		   }

@@ -80,7 +80,6 @@ public class BaseController<T,ID> {
 					Method m = t.getClass().getMethod("get" + paramname);
 					//参数对象的属性值
                     Object value =m.invoke(t);
-        			System.err.println(value);
         			fieldValue=value;
         		} catch (Exception e) {
         			throw new CommonRollbackException("类型找不到异常");

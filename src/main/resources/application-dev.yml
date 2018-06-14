@@ -30,14 +30,18 @@ spring:
       min-idle: 100
       max-idle: 300
       max-active: 800 
+    
 myPugin: 
+  uploaderPath:
+    rootPath: D:/nieyue
+    locationPath: /uploaderPath/img 
   session: 
     myDomainName: null
   projectName: WeiXinProject
-  projectDomainUrl: http://127.0.0.1:8080
+  projectDomainUrl: http://localhost:8080
   shiro: 
     anon: 
-      locations: / , /swagger-resources/** , /swagger-ui.html , /webjars/** , /v2/** , /home/** , /resources/** , /tool/** ,/account/login
+      locations: / , /swagger-resources/** , /swagger-ui.html , /webjars/** , /v2/** , /home/** ,/uploaderPath/** , /resources/** , /tool/** 
   alibaba: 
     alipay:
       APP_ID: 2018011501882345 

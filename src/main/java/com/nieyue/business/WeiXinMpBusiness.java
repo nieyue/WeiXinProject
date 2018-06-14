@@ -5,37 +5,46 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.nieyue.bean.KfArticle;
 import com.nieyue.bean.KfMessage;
+import com.nieyue.bean.Subscription;
 import com.nieyue.exception.CommonRollbackException;
+import com.nieyue.service.SubscriptionService;
+import com.nieyue.weixin.mp.KfSessionHandler;
+import com.nieyue.weixin.mp.LogHandler;
+import com.nieyue.weixin.mp.MenuHandler;
+import com.nieyue.weixin.mp.MsgHandler;
+import com.nieyue.weixin.mp.NullHandler;
+import com.nieyue.weixin.mp.ScanHandler;
+import com.nieyue.weixin.mp.StoreCheckNotifyHandler;
+import com.nieyue.weixin.mp.SubscribeHandler;
+import com.nieyue.weixin.mp.UnsubscribeHandler;
 
 import me.chanjar.weixin.common.api.WxConsts;
 import me.chanjar.weixin.common.api.WxConsts.EventType;
 import me.chanjar.weixin.common.api.WxConsts.MenuButtonType;
 import me.chanjar.weixin.common.api.WxConsts.XmlMsgType;
 import me.chanjar.weixin.common.exception.WxErrorException;
-import me.chanjar.weixin.common.session.WxSessionManager;
 import me.chanjar.weixin.mp.api.WxMpInMemoryConfigStorage;
-import me.chanjar.weixin.mp.api.WxMpMessageHandler;
 import me.chanjar.weixin.mp.api.WxMpMessageRouter;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.api.impl.WxMpServiceImpl;
 import me.chanjar.weixin.mp.bean.kefu.WxMpKefuMessage;
-import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
-import me.chanjar.weixin.mp.bean.message.WxMpXmlOutMessage;
 import me.chanjar.weixin.mp.bean.result.WxMpOAuth2AccessToken;
 import me.chanjar.weixin.mp.bean.result.WxMpUser;
 import me.chanjar.weixin.mp.bean.result.WxMpUserList;
 import me.chanjar.weixin.mp.bean.template.WxMpTemplateData;
 import me.chanjar.weixin.mp.bean.template.WxMpTemplateMessage;
 import me.chanjar.weixin.mp.constant.WxMpEventConstants;
-import me.chanjar.weixin.mp.util.json.WxMpGsonBuilder;
 import net.sf.json.JSONObject;
 
 /**
@@ -45,205 +54,104 @@ import net.sf.json.JSONObject;
  */
 @Configuration
 public class WeiXinMpBusiness {
-	//存放多个WxMpInMemoryConfigStorage
-	Map<String,WxMpInMemoryConfigStorage> mapWxMpInMemoryConfigStorage=new HashMap<>();
 	//存放多个WxMpService
 	Map<String,WxMpService> mapWxMpService=new HashMap<>();
 	WxMpService wxMpService;
 	Logger logger=LoggerFactory.getLogger(WeiXinMpBusiness.class);
 	
-
+	
+	  @Autowired
+	  protected SubscriptionService subscriptionService;
+	  @Autowired
+	  protected LogHandler logHandler;
+	  @Autowired
+	  protected NullHandler nullHandler;
+	  @Autowired
+	  protected KfSessionHandler kfSessionHandler;
+	  @Autowired
+	  protected StoreCheckNotifyHandler storeCheckNotifyHandler;
+	 /* @Autowired
+	  private LocationHandler locationHandler;*/
+	  @Autowired
+	  private MenuHandler menuHandler;
+	  @Autowired
+	  private MsgHandler msgHandler;
+	  @Autowired
+	  private UnsubscribeHandler unsubscribeHandler;
+	  @Autowired
+	  private SubscribeHandler subscribeHandler;
+	  @Autowired
+	  private ScanHandler scanHandler;
+	  //类初始化,把所有的公众号配置放入内存
+	  @PostConstruct
+	  public void  WeiXinMpBusinessInit() {
+		  List<Subscription> sl = subscriptionService.list(1, Integer.MAX_VALUE, null, null, null);
+			sl.forEach((e)->{				
+		  //初始化，不然新关注用户不能获取到账户信息
+			try {
+				init(e.getAppid(), e.getAppsecret(), e.getToken(), "aes");
+			} catch (WxErrorException e1) {
+				this.logger.info("初始化失败1");
+			}
+			});
+		}
 	  @Bean
 	  public WxMpMessageRouter router() {
 	    final WxMpMessageRouter newRouter = new WxMpMessageRouter(wxMpService);
+
+	    // 记录所有事件的日志 （异步执行）
+	    newRouter.rule().handler(this.logHandler).next();
+
 	    // 接收客服会话管理事件
 	    newRouter.rule().async(false).msgType(XmlMsgType.EVENT)
 	        .event(WxMpEventConstants.CustomerService.KF_CREATE_SESSION)
-	        .handler(new WxMpMessageHandler() {
-				
-				@Override
-				public WxMpXmlOutMessage handle(WxMpXmlMessage wxMessage, Map<String, Object> context, WxMpService wxMpService,
-						WxSessionManager sessionManager) throws WxErrorException {
-					// TODO Auto-generated method stub
-					return null;
-				}
-			}).end();
-	    
+	        .handler(this.kfSessionHandler).end();
 	    newRouter.rule().async(false).msgType(XmlMsgType.EVENT)
 	        .event(WxMpEventConstants.CustomerService.KF_CLOSE_SESSION)
-	        .handler(new WxMpMessageHandler() {
-				
-				@Override
-				public WxMpXmlOutMessage handle(WxMpXmlMessage wxMessage, Map<String, Object> context, WxMpService wxMpService,
-						WxSessionManager sessionManager) throws WxErrorException {
-					// TODO Auto-generated method stub
-					return null;
-				}
-			})
+	        .handler(this.kfSessionHandler)
 	        .end();
 	    newRouter.rule().async(false).msgType(XmlMsgType.EVENT)
 	        .event(WxMpEventConstants.CustomerService.KF_SWITCH_SESSION)
-	        .handler(new WxMpMessageHandler() {
-				
-				@Override
-				public WxMpXmlOutMessage handle(WxMpXmlMessage wxMessage, Map<String, Object> context, WxMpService wxMpService,
-						WxSessionManager sessionManager) throws WxErrorException {
-					// TODO Auto-generated method stub
-					return null;
-				}
-			}).end();
+	        .handler(this.kfSessionHandler).end();
 
 	    // 门店审核事件
 	    newRouter.rule().async(false).msgType(XmlMsgType.EVENT)
 	        .event(WxMpEventConstants.POI_CHECK_NOTIFY)
-	        .handler(new WxMpMessageHandler() {
-				
-				@Override
-				public WxMpXmlOutMessage handle(WxMpXmlMessage wxMessage, Map<String, Object> context, WxMpService wxMpService,
-						WxSessionManager sessionManager) throws WxErrorException {
-					// TODO Auto-generated method stub
-					return null;
-				}
-			}).end();
+	        .handler(this.storeCheckNotifyHandler).end();
 
 	    // 自定义菜单事件
 	    newRouter.rule().async(false).msgType(XmlMsgType.EVENT)
-	        .event(MenuButtonType.CLICK).handler(new WxMpMessageHandler() {
-				
-				@Override
-				public WxMpXmlOutMessage handle(WxMpXmlMessage wxMessage, Map<String, Object> context, WxMpService wxMpService,
-						WxSessionManager sessionManager) throws WxErrorException {
-					// TODO Auto-generated method stub
-					return null;
-				}
-			}).end();
+	        .event(MenuButtonType.CLICK).handler(this.menuHandler).end();
 
 	    // 点击菜单连接事件
 	    newRouter.rule().async(false).msgType(XmlMsgType.EVENT)
-	        .event(MenuButtonType.VIEW).handler(new WxMpMessageHandler() {
-				
-				@Override
-				public WxMpXmlOutMessage handle(WxMpXmlMessage wxMessage, Map<String, Object> context, WxMpService wxMpService,
-						WxSessionManager sessionManager) throws WxErrorException {
-					System.out.println(111);
-					System.out.println(context.toString());
-					System.out.println(wxMessage.getFromUser());
-					logger.info("点击菜单连接事件context={}", context);
-		    		logger.info("点击菜单连接事件wxMessage={}", wxMessage);
-					return null;
-				}
-			}).end();
-	    // 点击菜单推事件
-	    newRouter.rule().async(false).msgType(XmlMsgType.EVENT)
-	    .event(MenuButtonType.CLICK).handler(new WxMpMessageHandler() {
-	    	
-	    	@Override
-	    	public WxMpXmlOutMessage handle(WxMpXmlMessage wxMessage, Map<String, Object> context, WxMpService wxMpService,
-	    			WxSessionManager sessionManager) throws WxErrorException {
-	    		System.out.println(111222222);
-	    		System.out.println(context.toString());
-				System.out.println(wxMessage.getFromUser());
-	    		logger.info("点击菜单推事件context={}", context);
-	    		logger.info("点击菜单推事件wxMessage={}", wxMessage);
-	    		return null;
-	    	}
-	    }).end();
+	        .event(MenuButtonType.VIEW).handler(this.nullHandler).end();
 
 	    // 关注事件
 	    newRouter.rule().async(false).msgType(XmlMsgType.EVENT)
-	        .event(EventType.SUBSCRIBE).handler(new WxMpMessageHandler() {
-				
-				@Override
-				public WxMpXmlOutMessage handle(WxMpXmlMessage wxMessage, Map<String, Object> context, WxMpService wxMpService,
-						WxSessionManager sessionManager) throws WxErrorException {
-					// TODO Auto-generated method stub
-					return null;
-				}
-			})
+	        .event(EventType.SUBSCRIBE).handler(this.subscribeHandler)
 	        .end();
 
 	    // 取消关注事件
 	    newRouter.rule().async(false).msgType(XmlMsgType.EVENT)
 	        .event(EventType.UNSUBSCRIBE)
-	        .handler(new WxMpMessageHandler() {
-				
-				@Override
-				public WxMpXmlOutMessage handle(WxMpXmlMessage wxMessage, Map<String, Object> context, WxMpService wxMpService,
-						WxSessionManager sessionManager) throws WxErrorException {
-					// TODO Auto-generated method stub
-					return null;
-				}
-			}).end();
+	        .handler(this.unsubscribeHandler).end();
 
 	    // 上报地理位置事件
-	    newRouter.rule().async(false).msgType(XmlMsgType.EVENT)
-	        .event(EventType.LOCATION).handler(new WxMpMessageHandler() {
-				
-				@Override
-				public WxMpXmlOutMessage handle(WxMpXmlMessage wxMessage, Map<String, Object> context, WxMpService wxMpService,
-						WxSessionManager sessionManager) throws WxErrorException {
-					// TODO Auto-generated method stub
-					return null;
-				}
-			})
-	        .end();
+	    /*newRouter.rule().async(false).msgType(XmlMsgType.EVENT)
+	        .event(EventType.LOCATION).handler(this.locationHandler)
+	        .end();*/
 
 	    // 接收地理位置消息
-	    newRouter.rule().async(false).msgType(XmlMsgType.LOCATION)
-	        .handler(new WxMpMessageHandler() {
-				
-				@Override
-				public WxMpXmlOutMessage handle(WxMpXmlMessage wxMessage, Map<String, Object> context, WxMpService wxMpService,
-						WxSessionManager sessionManager) throws WxErrorException {
-					// TODO Auto-generated method stub
-					return null;
-				}
-			}).end();
+	   /* newRouter.rule().async(false).msgType(XmlMsgType.LOCATION)
+	        .handler(this.locationHandler).end();*/
 
 	    // 扫码事件
 	    newRouter.rule().async(false).msgType(XmlMsgType.EVENT)
-	        .event(EventType.SCAN).handler(new WxMpMessageHandler() {
-				
-				@Override
-				public WxMpXmlOutMessage handle(WxMpXmlMessage wxMessage, Map<String, Object> context, WxMpService wxMpService,
-						WxSessionManager sessionManager) throws WxErrorException {
-					// TODO Auto-generated method stub
-					return null;
-				}
-			}).end();
+	        .event(EventType.SCAN).handler(this.scanHandler).end();
 
 	    // 默认
-	    newRouter.rule().async(false).handler(new WxMpMessageHandler() {
-			
-			@Override
-			public WxMpXmlOutMessage handle(WxMpXmlMessage wxMessage, Map<String, Object> context, WxMpService wxMpService,
-					WxSessionManager sessionManager) throws WxErrorException {
-
-			    if (!wxMessage.getMsgType().equals(XmlMsgType.EVENT)) {
-			      //TODO 可以选择将消息保存到本地
-			    }
-
-			    //当用户输入关键词如“你好”，“客服”等，并且有客服在线时，把消息转发给在线客服
-			    try {
-			      if (StringUtils.startsWithAny(wxMessage.getContent(), "你好", "客服")
-			          && wxMpService.getKefuService().kfOnlineList()
-			          .getKfOnlineList().size() > 0) {
-			        return WxMpXmlOutMessage.TRANSFER_CUSTOMER_SERVICE()
-			            .fromUser(wxMessage.getToUser())
-			            .toUser(wxMessage.getFromUser()).build();
-			      }
-			    } catch (WxErrorException e) {
-			      e.printStackTrace();
-			    }
-
-			    //TODO 组装回复消息
-			    String content = "收到信息内容：" + WxMpGsonBuilder.create().toJson(wxMessage);
-			   return WxMpXmlOutMessage.TEXT().content(content)
-			            .fromUser(wxMessage.getToUser()).toUser(wxMessage.getFromUser())
-			            .build();
-
-			  }
-		}).end();
+	    //newRouter.rule().async(false).handler(this.msgHandler).end();
 
 	    return newRouter;
 	  }
@@ -279,7 +187,7 @@ public class WeiXinMpBusiness {
 		return wxMpUser;
 	}
 	/**
-	 * 初始化
+	 * 初始化增加
 	 * @param appid 公众号appid
 	 * @param secret 公众号 秘钥
 	 * @param token 公众号服务token
@@ -293,6 +201,47 @@ public class WeiXinMpBusiness {
 			String token,
 			String aesKey
 			) throws WxErrorException{
+		//如果存在直接取，
+		if(mapWxMpService.get(appid)!=null){
+		//System.out.println(appid);
+		wxMpService=mapWxMpService.get(appid);
+		}else{
+			WxMpInMemoryConfigStorage config = new WxMpInMemoryConfigStorage();
+			config.setAppId(appid); // 设置微信公众号的appid
+			config.setSecret(secret); // 设置微信公众号的app corpSecret
+			if(token==null||"".equals(token)){
+				config.setToken("nieyue"); // 设置微信公众号的token						
+			}else{
+				config.setToken(token); // 设置微信公众号的token			
+			}
+			config.setAesKey(aesKey); // 设置微信公众号的EncodingAESKey
+			wxMpService=new WxMpServiceImpl();
+			wxMpService.setWxMpConfigStorage(config);
+			mapWxMpService.put(appid, wxMpService);
+		}
+		return wxMpService;
+	}
+	/**
+	 * 初始化修改
+	 * @param appid 公众号appid
+	 * @param secret 公众号 秘钥
+	 * @param token 公众号服务token
+	 * @param aesKey 加密协议
+	 * @throws WxErrorException 
+	 * @return  wxMpService 当前公众号服务
+	 */
+	public WxMpService initupdate(
+			String appid,
+			String secret,
+			String token,
+			String aesKey
+			) throws WxErrorException{
+		//如果存在直接取修改，
+		if(mapWxMpService.get(appid)!=null){
+			wxMpService=mapWxMpService.get(appid);
+		}else{
+			wxMpService=new WxMpServiceImpl();
+		}
 		WxMpInMemoryConfigStorage config = new WxMpInMemoryConfigStorage();
 		config.setAppId(appid); // 设置微信公众号的appid
 		config.setSecret(secret); // 设置微信公众号的app corpSecret
@@ -302,17 +251,31 @@ public class WeiXinMpBusiness {
 			config.setToken(token); // 设置微信公众号的token			
 		}
 		config.setAesKey(aesKey); // 设置微信公众号的EncodingAESKey
-		//如果存在直接取，
-		if(mapWxMpInMemoryConfigStorage.get(appid)!=null){
-		//System.out.println(appid);
-		wxMpService=mapWxMpService.get(appid);
-		}else{
-			mapWxMpInMemoryConfigStorage.put(appid, config);
-			wxMpService=new WxMpServiceImpl();
-			wxMpService.setWxMpConfigStorage(config);
-			mapWxMpService.put(appid, wxMpService);
-		}
+		wxMpService.setWxMpConfigStorage(config);
+		mapWxMpService.put(appid, wxMpService);
 		return wxMpService;
+	}
+	/**
+	 * 初始化删除
+	 * @param appid 公众号appid
+	 * @param secret 公众号 秘钥
+	 * @param token 公众号服务token
+	 * @param aesKey 加密协议
+	 * @throws WxErrorException 
+	 * @return  wxMpService 当前公众号服务
+	 */
+	public boolean initdelete(
+			String appid,
+			String secret,
+			String token,
+			String aesKey
+			) throws WxErrorException{
+		//如果存在直接取修改，
+		if(mapWxMpService.get(appid)!=null){
+			mapWxMpService.remove(appid);
+			return true;
+		}
+		return false;
 	}
 	/**
 	 * 获取该公众号用户列表

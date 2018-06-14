@@ -1,15 +1,20 @@
 package com;
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletContainer;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizer;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.web.servlet.ErrorPage;
 import org.springframework.boot.web.servlet.ServletComponentScan;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+
+import com.nieyue.service.PermissionService;
 
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
@@ -24,7 +29,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @ServletComponentScan
 @EnableSwagger2
 @MapperScan("com.nieyue.dao")
-public class MyApplication extends WebMvcConfigurerAdapter {
+public class MyApplication extends WebMvcConfigurerAdapter  implements ApplicationListener<ApplicationReadyEvent> {
 	
 	public static void main(String[] args) {
 		SpringApplication.run(MyApplication.class,args);
@@ -61,5 +66,19 @@ public class MyApplication extends WebMvcConfigurerAdapter {
 	            container.addErrorPages( error500Page);
 	        }
 	    };
+	}
+	
+	@Autowired
+	PermissionService permissionService;
+	/**
+	 * 容器初始化
+	 * @param event
+	 */
+	@Override
+	public void onApplicationEvent(ApplicationReadyEvent event) {
+		//初始化权限列表
+		permissionService.initPermission();
+		
+		
 	}
 	}

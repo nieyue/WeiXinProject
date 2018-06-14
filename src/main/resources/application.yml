@@ -50,13 +50,10 @@ mybatis-plus:
     #配置JdbcTypeForNull, oracle数据库必须配置
     jdbc-type-for-null: 'null'    
 
-uploaderPath:  
-  rootPath: D:/nieyue
-  #rootPath: /home
-  locationPath: /uploaderPath/img    
+
 spring: 
   resources: 
-    static-locations:  file:${uploaderPath.rootPath}/, classpath:/META-INF/resources/, classpath:/resources/, classpath:/static/, classpath:/public/        
+    static-locations:  file:${myPugin.uploaderPath.rootPath}/, classpath:/META-INF/resources/, classpath:/resources/, classpath:/static/, classpath:/public/        
   http: 
     multipart: 
       max-file-size: 30MB

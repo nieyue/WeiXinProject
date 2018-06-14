@@ -62,8 +62,10 @@ public class ShiroUtil {
                     //System.out.println(tagslist.get(i).getDescription());
                     permission.setManagerName(tagslist.get(i).getDescription());//权限管理名称
                     permission.setName(ss.get("summary").toString());//权限名称
-                    permission.setRoute(entry.getKey());//权限路由
+                    String route=entry.getKey();
+                    permission.setRoute(route);//权限路由
                     if(entry.getKey().indexOf("/list")>0
+                    		||entry.getKey().indexOf("/weixin/portal")>0
                     		||entry.getKey().indexOf("tool")>0
                     		||entry.getKey().indexOf("login")>0
                     		||entry.getKey().indexOf("register")>0
@@ -74,6 +76,11 @@ public class ShiroUtil {
                     }else{
                     	permission.setType(1);//默认鉴权
                     	
+                    }
+                    //针对pathvariable,
+                    if(route.contains("{")&&route.contains("}")){
+                    	String prevroute=route.substring(0, route.indexOf("{"));
+                    	permission.setRoute(prevroute+"**");//重设路由
                     }
                     b=permissionService.add(permission);
                     // System.out.println("---------------------");

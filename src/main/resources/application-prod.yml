@@ -1,5 +1,5 @@
 server:
-  port: 9000
+  port: 8091
   session:
     #timeout: 1800
     timeout: 1296000 #1个月
@@ -15,7 +15,7 @@ spring:
   datasource: 
     name: master
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://118.31.44.127:3306/wei_xin_project_db
+    url: jdbc:mysql://118.190.133.146:3306/wei_xin_project_db
     username: root
     password: liliu
   redis:
@@ -29,13 +29,16 @@ spring:
       max-idle: 300
       max-active: 800
 myPugin: 
+  uploaderPath:  
+    rootPath: /home
+    locationPath: /uploaderPath/img
   session: 
-    myDomainName: laoyeshuo.cn
+    myDomainName: boya1.cn
   projectName: WeiXinProject
-  projectDomainUrl: http://ccsd.tea18.cn
+  projectDomainUrl: http://ccsd.boya1.cn
   shiro: 
     anon:
-      locations: / , /swagger-resources/** , /swagger-ui.html , /webjars/** , /v2/** , /home/** , /resources/** ,/tool/** , /account/login
+      locations: / , /swagger-resources/** , /swagger-ui.html , /webjars/** , /v2/** , /home/** , /resources/** ,/uploaderPath/**
   alibaba: 
     alipay:
       APP_ID: 2018011501882345 

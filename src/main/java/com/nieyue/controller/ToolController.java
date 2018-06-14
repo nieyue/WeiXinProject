@@ -10,13 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,8 +18,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.nieyue.business.SubscriptionBusiness;
-import com.nieyue.exception.CommonRollbackException;
 import com.nieyue.util.DateUtil;
 import com.nieyue.util.FileUploadUtil;
 import com.nieyue.util.ThumbnailatorUtils;
@@ -33,10 +25,6 @@ import com.nieyue.verification.VerificationCode;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import me.chanjar.weixin.mp.api.WxMpMessageRouter;
-import me.chanjar.weixin.mp.api.WxMpService;
-import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
-import me.chanjar.weixin.mp.bean.message.WxMpXmlOutMessage;
 
 
 
@@ -51,14 +39,11 @@ import me.chanjar.weixin.mp.bean.message.WxMpXmlOutMessage;
 public class ToolController extends BaseController<Object,Long>{
 	@Resource
 	VerificationCode verificationCode;
-	@Value("${uploaderPath.rootPath}")
+	@Value("${myPugin.uploaderPath.rootPath}")
 	String rootPath;
-	@Value("${uploaderPath.locationPath}")
+	@Value("${myPugin.uploaderPath.locationPath}")
 	String locationPath;
-	@Autowired
-	SubscriptionBusiness subscriptionBusiness;
-	@Autowired
-	private WxMpMessageRouter router;
+	
 	
 	/**
 	 * 验证码
@@ -150,82 +135,4 @@ public class ToolController extends BaseController<Object,Long>{
 		return session.getId();
 		
 	}
-	/**
-	 * 微信门户
-	 * @return
-	 */
-	@ApiOperation(value = "微信服务门户", notes = "微信服务门户")
-	@GetMapping(value = "/weixin/portal/{appid}",produces = "text/plain;charset=utf-8")
-	public String weixinPortal(
-			@RequestParam(name = "signature",required = false) String signature,
-			@RequestParam(name = "timestamp", required = false) String timestamp,
-			@RequestParam(name = "nonce", required = false) String nonce,
-			@RequestParam(name = "echostr", required = false) String echostr,
-			@PathVariable(value="appid") String appid,
-			HttpSession	 session
-			){
-	    if (StringUtils.isAnyBlank(signature, timestamp, nonce, echostr)) {
-	      throw new CommonRollbackException("请求参数非法，请核实!");
-	    }
-		WxMpService wxMpService=subscriptionBusiness.getWxMpService(appid);
-		if (wxMpService!=null&&wxMpService.checkSignature(timestamp, nonce, signature)) {
-			return echostr;
-		}		   
-	    return "非法请求";
-	  }
-	 @PostMapping(value = "/weixin/portal/{appid}",produces = "application/xml; charset=UTF-8")
-	  public String post(@RequestBody String requestBody,
-	                     @RequestParam("signature") String signature,
-	                     @RequestParam("timestamp") String timestamp,
-	                     @RequestParam("nonce") String nonce,
-	                     @RequestParam(name = "encrypt_type",
-	                         required = false) String encType,
-	                     @RequestParam(name = "msg_signature",
-	                         required = false) String msgSignature,
-	                 	@PathVariable(value="appid") String appid) {
-		 WxMpService wxMpService=subscriptionBusiness.getWxMpService(appid);
-	    if (wxMpService==null||!wxMpService.checkSignature(timestamp, nonce, signature)) {
-	      throw new CommonRollbackException("请求参数非法，请核实!");
-	    }
-
-	    String out = null;
-	    if (encType == null) {
-	      // 明文传输的消息
-	      WxMpXmlMessage inMessage = WxMpXmlMessage.fromXml(requestBody);
-	      WxMpXmlOutMessage outMessage = this.route(inMessage);
-	      if (outMessage == null) {
-	        return "";
-	      }
-
-	      out = outMessage.toXml();
-	    } else if ("aes".equals(encType)) {
-	      // aes加密的消息
-	      WxMpXmlMessage inMessage = WxMpXmlMessage.fromEncryptedXml(
-	          requestBody, wxMpService.getWxMpConfigStorage(), timestamp,
-	          nonce, msgSignature);
-	      this.logger.debug("\n消息解密后内容为：\n{} ", inMessage.toString());
-	      WxMpXmlOutMessage outMessage = this.route(inMessage);
-	      if (outMessage == null) {
-	        return "";
-	      }
-
-	      out = outMessage
-	          .toEncryptedXml(wxMpService.getWxMpConfigStorage());
-	    }
-
-	    this.logger.debug("\n组装回复信息：{}", out);
-
-	    return out;
-	  }
-
-	  private WxMpXmlOutMessage route(WxMpXmlMessage message) {
-	    try {
-	      return this.router.route(message);
-	    } catch (Exception e) {
-	      this.logger.error(e.getMessage(), e);
-	    }
-
-	    return null;
-	  }
-	
 }
