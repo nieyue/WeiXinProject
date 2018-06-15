@@ -8,6 +8,8 @@ import java.util.Map;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -17,15 +19,22 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
+import com.nieyue.bean.Subscription;
 import com.nieyue.bean.TemplateMessage;
+import com.nieyue.business.WeiXinMpBusiness;
+import com.nieyue.exception.CommonRollbackException;
+import com.nieyue.service.SubscriptionService;
 import com.nieyue.service.TemplateMessageService;
 import com.nieyue.util.MyDom4jUtil;
+import com.nieyue.util.ResultUtil;
 import com.nieyue.util.StateResultList;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import me.chanjar.weixin.common.exception.WxErrorException;
+import me.chanjar.weixin.mp.bean.template.WxMpTemplate;
 
 
 /**
@@ -39,6 +48,10 @@ import io.swagger.annotations.ApiOperation;
 public class TemplateMessageController extends BaseController<TemplateMessage,Long> {
 	@Resource
 	private TemplateMessageService templateMessageService;
+	@Autowired
+	private WeiXinMpBusiness weiXinMpBusiness;
+	@Autowired
+	private SubscriptionService subscriptionService;
 	
 	/**
 	 * 模板消息分页浏览
@@ -75,9 +88,28 @@ public class TemplateMessageController extends BaseController<TemplateMessage,Lo
 	@ApiOperation(value = "模板消息修改", notes = "模板消息修改")
 	@RequestMapping(value = "/update", method = {RequestMethod.GET,RequestMethod.POST})
 	public @ResponseBody StateResultList<List<TemplateMessage>> update(@ModelAttribute TemplateMessage templateMessage,HttpSession session)  {
-		templateMessage.setUpdateDate(new Date());
-		StateResultList<List<TemplateMessage>> u = super.update(templateMessage);
-		return u;
+		try {
+			Subscription subscription = subscriptionService.load(templateMessage.getSubscriptionId());
+			if(subscription==null){
+				throw new CommonRollbackException("公众号不存在");
+			}
+			if(StringUtils.isEmpty(subscription.getAppid())
+					||StringUtils.isEmpty(subscription.getAppid())
+					){
+				throw new CommonRollbackException("公众号缺少appid或者appsecret");
+			}
+			//初始化公众号
+			weiXinMpBusiness.init(subscription.getAppid(), subscription.getAppsecret(), subscription.getToken(), "aes");
+			WxMpTemplate wxMpTemplate = weiXinMpBusiness.getWxMpTemplate(templateMessage.getTeamplateId(),templateMessage.getTitle());
+			templateMessage.setTeamplateId(wxMpTemplate.getTemplateId());
+			templateMessage.setTitle(wxMpTemplate.getTitle());
+			templateMessage.setContent(wxMpTemplate.getContent());
+			templateMessage.setUpdateDate(new Date());
+			StateResultList<List<TemplateMessage>> u = super.update(templateMessage);
+			return u;
+		} catch (WxErrorException e) {
+			throw new CommonRollbackException("模板消息配置不正确");
+		}
 	}
 	/**
 	 * 模板消息增加
@@ -86,10 +118,30 @@ public class TemplateMessageController extends BaseController<TemplateMessage,Lo
 	@ApiOperation(value = "模板消息增加", notes = "模板消息增加")
 	@RequestMapping(value = "/add", method = {RequestMethod.GET,RequestMethod.POST})
 	public @ResponseBody StateResultList<List<TemplateMessage>> add(@ModelAttribute TemplateMessage templateMessage, HttpSession session) {
-		templateMessage.setCreateDate(new Date());
-		templateMessage.setUpdateDate(new Date());
-		StateResultList<List<TemplateMessage>> a = super.add(templateMessage);
-		return a;
+		//获取模板消息
+		try {
+			Subscription subscription = subscriptionService.load(templateMessage.getSubscriptionId());
+			if(subscription==null){
+				throw new CommonRollbackException("公众号不存在");
+			}
+			if(StringUtils.isEmpty(subscription.getAppid())
+					||StringUtils.isEmpty(subscription.getAppid())
+					){
+				throw new CommonRollbackException("公众号缺少appid或者appsecret");
+			}
+			//初始化公众号
+			weiXinMpBusiness.init(subscription.getAppid(), subscription.getAppsecret(), subscription.getToken(), "aes");
+			WxMpTemplate wxMpTemplate = weiXinMpBusiness.getWxMpTemplate(templateMessage.getTeamplateId(),templateMessage.getTitle());
+			templateMessage.setTeamplateId(wxMpTemplate.getTemplateId());
+			templateMessage.setTitle(wxMpTemplate.getTitle());
+			templateMessage.setContent(wxMpTemplate.getContent());
+			templateMessage.setCreateDate(new Date());
+			templateMessage.setUpdateDate(new Date());
+			StateResultList<List<TemplateMessage>> a = super.add(templateMessage);
+			return a;
+		} catch (WxErrorException e) {
+			throw new CommonRollbackException("模板消息配置不正确");
+		}
 	}
 	/**
 	 * 模板消息删除
@@ -135,6 +187,22 @@ public class TemplateMessageController extends BaseController<TemplateMessage,Lo
 	public  StateResultList<List<TemplateMessage>> loadTemplateMessage(@RequestParam("templateMessageId") Long templateMessageId,HttpSession session)  {
 		 StateResultList<List<TemplateMessage>> l = super.load(templateMessageId);
 		 return l;
+	}
+	/**
+	 * 模板消息群发
+	 * @return
+	 */
+	@ApiOperation(value = "模板消息群发", notes = "模板消息群发")
+	@ApiImplicitParams({
+		@ApiImplicitParam(name="templateMessageId",value="客服消息ID",dataType="long", paramType = "query",required=true)
+	})
+	@RequestMapping(value = "/sendTemplateMessage", method = {RequestMethod.GET,RequestMethod.POST})
+	public  StateResultList<List<TemplateMessage>> sendKfMessage(@RequestParam("templateMessageId") Long templateMessageId,HttpSession session)  {
+		List<TemplateMessage> list = templateMessageService.sendTemplateMessage(templateMessageId);
+		if(list.size()>0){
+			return ResultUtil.getSlefSRSuccessList(list);
+		}
+		return ResultUtil.getSlefSRFailList(list);
 	}
 	
 }

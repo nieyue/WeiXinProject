@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.nieyue.bean.ReceiptInfo;
+import com.nieyue.bean.Sign;
 import com.nieyue.exception.CommonNotRollbackException;
 import com.nieyue.exception.CommonRollbackException;
 import com.nieyue.service.ReceiptInfoService;
@@ -56,7 +57,7 @@ public class ReceiptInfoController extends BaseController<ReceiptInfo, Long> {
 	 */
 	@ApiOperation(value = "收货信息", notes = "收货信息分页浏览")
 	@ApiImplicitParams({ 
-			@ApiImplicitParam(name = "openid", value = "微信openid", dataType = "long", paramType = "query"),
+			@ApiImplicitParam(name = "openid", value = "微信openid", dataType = "string", paramType = "query"),
 			@ApiImplicitParam(name = "accountId", value = "账户ID", dataType = "long", paramType = "query"),
 			@ApiImplicitParam(name = "isDefault", value = "默认为0不是，1是", dataType = "int", paramType = "query"),
 			@ApiImplicitParam(name = "createDate", value = "创建时间", dataType = "date-time", paramType = "query"),
@@ -68,7 +69,7 @@ public class ReceiptInfoController extends BaseController<ReceiptInfo, Long> {
 			})
 	@RequestMapping(value = "/list", method = { RequestMethod.GET, RequestMethod.POST})
 	public @ResponseBody StateResultList<List<ReceiptInfo>> browsePagingReceiptInfo(
-			@RequestParam(value = "openid", required = false) Long openid,
+			@RequestParam(value = "openid", required = false) String openid,
 			@RequestParam(value = "accountId", required = false) Long accountId,
 			@RequestParam(value = "isDefault", required = false) Integer isDefault,
 			@RequestParam(value = "createDate", required = false) Date createDate,
@@ -140,9 +141,19 @@ public class ReceiptInfoController extends BaseController<ReceiptInfo, Long> {
 			throw new CommonRollbackException("地址是必须的");
 		}
 		
+		
 		if(StringUtils.isEmpty(receiptInfo.getOpenid())){
 			throw new CommonRollbackException("openid是必须的");
 		}else{
+			Wrapper<Sign> signwrapper = new EntityWrapper<>();
+			Map<String, Object> signmap = new HashMap<>();
+			signmap.put("openid", receiptInfo.getOpenid());
+			signwrapper.allEq(MyDom4jUtil.getNoNullMap(signmap));
+			int signcount = signService.count(signwrapper);
+			if(signcount<=0){
+				throw new CommonRollbackException("有奖品才能填写！");
+			}
+			
 			Wrapper<ReceiptInfo> wrapper = new EntityWrapper<>();
 			Map<String, Object> map = new HashMap<>();
 			map.put("openid", receiptInfo.getOpenid());
@@ -180,14 +191,14 @@ public class ReceiptInfoController extends BaseController<ReceiptInfo, Long> {
 	 */
 	@ApiOperation(value = "收货信息数量", notes = "收货信息数量查询")
 	@ApiImplicitParams({
-		@ApiImplicitParam(name="openid",value="微信openid",dataType="long", paramType = "query"),
+		@ApiImplicitParam(name="openid",value="微信openid",dataType="string", paramType = "query"),
 		@ApiImplicitParam(name="accountId",value="收货信息id",dataType="long", paramType = "query"),
 		@ApiImplicitParam(name="isDefault",value="'默认为0不是，1是",dataType="int", paramType = "query"),
 		@ApiImplicitParam(name="createDate",value="创建时间",dataType="date-time", paramType = "query"),
 		@ApiImplicitParam(name="updateDate",value="更新时间",dataType="date-time", paramType = "query")})
 	@RequestMapping(value = "/count", method = {RequestMethod.GET,RequestMethod.POST})
 	public @ResponseBody StateResultList<List<Integer>> count(
-			@RequestParam(value="openid",required=false)Long openid,
+			@RequestParam(value="openid",required=false)String openid,
 			@RequestParam(value="accountId",required=false)Long accountId,
 			@RequestParam(value="isDefault",required=false)Integer isDefault,
 			@RequestParam(value="createDate",required=false)Date createDate,
@@ -230,12 +241,12 @@ public class ReceiptInfoController extends BaseController<ReceiptInfo, Long> {
 	@ApiImplicitParams({
 			@ApiImplicitParam(name = "receiptInfoId", value = "收货信息ID", dataType = "long", paramType = "query", required = true),
 			@ApiImplicitParam(name = "accountId", value = "账户ID,与openid必须选一个", dataType = "long", paramType = "query"),
-			@ApiImplicitParam(name = "openid", value = "微信openid,与openid必须选一个", dataType = "long", paramType = "query") })
+			@ApiImplicitParam(name = "openid", value = "微信openid,与openid必须选一个", dataType = "string", paramType = "query") })
 	@RequestMapping(value = "/setIsDefault", method = { RequestMethod.GET, RequestMethod.POST })
 	public @ResponseBody StateResultList<List<ReceiptInfo>> setReceiptInfoIsDefault(
 			@RequestParam(value = "receiptInfoId") Long receiptInfoId,
 			@RequestParam(value = "accountId", required = false) Long accountId,
-			@RequestParam(value = "openid", required = false) Long openid, HttpSession session) throws CommonNotRollbackException {
+			@RequestParam(value = "openid", required = false) String openid, HttpSession session) throws CommonNotRollbackException {
 		if (accountId == null && openid == null) {
 			throw new CommonNotRollbackException("参数缺失");
 		}

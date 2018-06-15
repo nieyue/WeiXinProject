@@ -1,5 +1,8 @@
 package com.nieyue.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
@@ -14,11 +17,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.nieyue.business.SubscriptionBusiness;
+import com.nieyue.business.WeiXinMpBusiness;
 import com.nieyue.exception.CommonRollbackException;
+import com.nieyue.util.StateResultList;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import me.chanjar.weixin.common.api.WxConsts.MenuButtonType;
 import me.chanjar.weixin.common.bean.menu.WxMenu;
 import me.chanjar.weixin.common.bean.menu.WxMenuButton;
 import me.chanjar.weixin.common.exception.WxErrorException;
@@ -40,7 +44,7 @@ public class WeiXinController extends BaseController<Object,Long>{
 	@Autowired
 	SubscriptionBusiness subscriptionBusiness;
 	@Autowired
-	private WxMpMessageRouter router;
+	WeiXinMpBusiness weiXinMpBusiness;
 	/**
 	 * 微信门户
 	 * @return
@@ -84,7 +88,7 @@ public class WeiXinController extends BaseController<Object,Long>{
 	    if (encType == null) {
 	      // 明文传输的消息
 	      WxMpXmlMessage inMessage = WxMpXmlMessage.fromXml(requestBody);
-	      WxMpXmlOutMessage outMessage = this.route(inMessage);
+	      WxMpXmlOutMessage outMessage = this.route(inMessage,appid);
 	      if (outMessage == null) {
 	        return "";
 	      }
@@ -96,7 +100,7 @@ public class WeiXinController extends BaseController<Object,Long>{
 	          requestBody, wxMpService.getWxMpConfigStorage(), timestamp,
 	          nonce, msgSignature);
 	      this.logger.debug("\n消息解密后内容为：\n{} ", inMessage.toString());
-	      WxMpXmlOutMessage outMessage = this.route(inMessage);
+	      WxMpXmlOutMessage outMessage = this.route(inMessage,appid);
 	      if (outMessage == null) {
 	        return "";
 	      }
@@ -110,9 +114,12 @@ public class WeiXinController extends BaseController<Object,Long>{
 	    return out;
 	  }
 
-	  private WxMpXmlOutMessage route(WxMpXmlMessage message) {
+	  private WxMpXmlOutMessage route(WxMpXmlMessage message,String appid) {
 	    try {
-	      return this.router.route(message);
+	    	//return this.router.route(message);
+	    	//更改为appid的服务
+	    	WxMpMessageRouter newRouter=new WxMpMessageRouter(subscriptionBusiness.getWxMpService(appid));
+	      return weiXinMpBusiness.router(newRouter).route(message);
 	    } catch (Exception e) {
 	      this.logger.error(e.getMessage(), e);
 	    }
@@ -130,60 +137,68 @@ public class WeiXinController extends BaseController<Object,Long>{
 	   * @param menu
 	   * @return 如果是个性化菜单，则返回menuid，否则返回null
 	   */
-	 /* @ApiOperation(value = "微信菜单创建", notes = "微信菜单创建")
+	 @ApiOperation(value = "微信菜单创建", notes = "微信菜单创建")
 	  @RequestMapping(value="/menu/create", method = {RequestMethod.GET,RequestMethod.POST})
 	  public String menuCreate(
 			  @RequestBody WxMenu menu,
+			  //@RequestParam(value="menu") String menu,
 			  @RequestParam(value="appid") String appid
 			  ) throws WxErrorException {
 		  WxMpService wxMpService=subscriptionBusiness.getWxMpService(appid);
 		  return wxMpService.getMenuService().menuCreate(menu);
-	  }*/
+	  }
 	  @ApiOperation(value = "微信菜单创建", notes = "微信菜单创建")
-	  @RequestMapping(value="/menu/create", method = {RequestMethod.GET,RequestMethod.POST})
-	  public String menuCreateSample(
+	  @RequestMapping(value="/menu/testcreate", method = {RequestMethod.GET,RequestMethod.POST})
+	  public  StateResultList<List<String>> menuCreateSample(
 			  @RequestParam(value="appid") String appid
 			  ) throws WxErrorException {
-	    WxMenu menu = new WxMenu();
-	    WxMenuButton button1 = new WxMenuButton();
-	    button1.setType(MenuButtonType.CLICK);
-	    button1.setName("今日歌曲");
-	    button1.setKey("V1001_TODAY_MUSIC");
-
-//	        WxMenuButton button2 = new WxMenuButton();
-//	        button2.setType(WxConsts.BUTTON_MINIPROGRAM);
-//	        button2.setName("小程序");
-//	        button2.setAppId("wx286b93c14bbf93aa");
-//	        button2.setPagePath("pages/lunar/index.html");
-//	        button2.setUrl("http://mp.weixin.qq.com");
-
-	    WxMenuButton button3 = new WxMenuButton();
-	    button3.setName("菜单");
-
-	    menu.getButtons().add(button1);
-//	        menu.getButtons().add(button2);
-	    menu.getButtons().add(button3);
-
-	    WxMenuButton button31 = new WxMenuButton();
-	    button31.setType(MenuButtonType.VIEW);
-	    button31.setName("搜索");
-	    button31.setUrl("http://www.soso.com/");
-
-	    WxMenuButton button32 = new WxMenuButton();
-	    button32.setType(MenuButtonType.VIEW);
-	    button32.setName("视频");
-	    button32.setUrl("http://v.qq.com/");
-
-	    WxMenuButton button33 = new WxMenuButton();
-	    button33.setType(MenuButtonType.CLICK);
-	    button33.setName("赞一下我们");
-	    button33.setKey("V1001_GOOD");
-
-	    button3.getSubButtons().add(button31);
-	    button3.getSubButtons().add(button32);
-	    button3.getSubButtons().add(button33);
-	    WxMpService wxMpService=subscriptionBusiness.getWxMpService(appid);
-	    return wxMpService.getMenuService().menuCreate(menu);
+		  WxMpService wxMpService=subscriptionBusiness.getWxMpService(appid);
+		    WxMpMenu oldMenu = wxMpService.getMenuService().menuGet();
+		    List<WxMenuButton> buttons = oldMenu.getMenu().getButtons();
+		    boolean haveButton=false;//是否已经有了
+		    //循环当前的所有按钮找到签到按钮
+		   loop: for (int i = 0; i < buttons.size(); i++) {
+		    	WxMenuButton button = buttons.get(i);
+		    	if(button.getSubButtons().size()>0){
+		    		for (int j = 0; j < button.getSubButtons().size(); j++) {
+		    			WxMenuButton subButton = button.getSubButtons().get(j);
+		    			if(subButton.getName().equals("签到有礼")){
+		    				subButton.setType("click");
+		    				subButton.setKey("签到有礼");
+		    				haveButton=true;
+		    				break loop;
+		    			}
+		    		}
+		    	}else{
+		    		if(button.getName().equals("签到有礼")){
+	    				button.setType("click");
+	    				button.setKey("签到有礼");
+	    				haveButton=true;
+	    				break loop;
+	    			}
+		    	}
+			}
+		    WxMenu menu = new WxMenu();
+		    //不存在，新建一个
+		    if(!haveButton){
+		    	WxMenuButton subButton = new WxMenuButton();
+		    	subButton.setName("签到有礼");
+		    	subButton.setType("click");
+		    	subButton.setKey("签到有礼");
+		    	WxMenuButton lastbutton = buttons.get(buttons.size()-1);
+		    	lastbutton.getSubButtons().add(subButton);
+		    	//放在最后一个
+		    	buttons.get(buttons.size()-1).setSubButtons(lastbutton.getSubButtons());
+		    }
+		    //放入
+		    menu.setButtons(buttons);
+		    StateResultList<List<String>> srl=new  StateResultList<>();
+		    srl.setCode(200);
+		    srl.setMsg("成功");
+		    List<String> list=new ArrayList<>();
+		    list.add(wxMpService.getMenuService().menuCreate(menu));
+		    srl.setData(list);
+		    return srl;
 	  }
 
 

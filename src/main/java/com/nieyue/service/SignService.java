@@ -17,12 +17,12 @@ public interface SignService extends BaseService<Sign, Long>{
 	 * @param wxUuid 微信uuid
 	 * @return
 	 */
-	public  List<Sign> accountSign(Long subscriptionId,Long accountId,String uuid); 
+	public  List<String> accountSign(Long subscriptionId,Long accountId,String uuid); 
 	/**
 	 * openid签到
 	 * @param subscriptionId 公众号id
 	 * @param wxOpenid  微信openid
 	 * @return
 	 */
-	public  List<Sign> openidSign(Long subscriptionId,String openid); 
+	public  List<String> openidSign(Long subscriptionId,String openid); 
 }

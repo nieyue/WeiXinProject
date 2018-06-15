@@ -35,6 +35,16 @@ public class TemplateMessage implements Serializable{
     @ApiModelProperty(value="模板id",example="模板id")
     private String teamplateId;
     /**
+     * 模板标题（必填），与公众号一致
+     */
+    @ApiModelProperty(value="模板标题（必填），与公众号一致",example="模板标题（必填），与公众号一致")
+    private String title;
+    /**
+     * 模板内容（可选），与公众号一致，只做展示
+     */
+    @ApiModelProperty(value="模板内容（可选），与公众号一致，只做展示",example="模板内容（可选），与公众号一致，只做展示")
+    private String content;
+    /**
      * 模板跳转链接
      */
     @ApiModelProperty(value="模板跳转链接",example="模板跳转链接")
@@ -114,6 +124,18 @@ public class TemplateMessage implements Serializable{
 	}
 	public static long getSerialversionuid() {
 		return serialVersionUID;
+	}
+	public String getTitle() {
+		return title;
+	}
+	public void setTitle(String title) {
+		this.title = title;
+	}
+	public String getContent() {
+		return content;
+	}
+	public void setContent(String content) {
+		this.content = content;
 	}
 	
 }

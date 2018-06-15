@@ -38,7 +38,8 @@ myPugin:
   session: 
     myDomainName: null
   projectName: WeiXinProject
-  projectDomainUrl: http://localhost:8080
+  #projectDomainUrl: http://localhost:8080
+  projectDomainUrl: http://nieyue.free.ngrok.cc
   shiro: 
     anon: 
       locations: / , /swagger-resources/** , /swagger-ui.html , /webjars/** , /v2/** , /home/** ,/uploaderPath/** , /resources/** , /tool/** 

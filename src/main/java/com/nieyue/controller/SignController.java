@@ -168,14 +168,14 @@ public class SignController extends BaseController<Sign,Long> {
 		@ApiImplicitParam(name="uuid",value="微信uuid",dataType="string", paramType = "query")
 	})
 	@RequestMapping(value = "/sign", method = {RequestMethod.GET,RequestMethod.POST})
-	public  StateResultList<List<Sign>> signSign(
+	public  StateResultList<List<String>> signSign(
 			@RequestParam(value="subscriptionId") Long subscriptionId,
 			@RequestParam(value="accountId",required=false) Long accountId,
 			@RequestParam(value="openid",required=false) String openid,
 			@RequestParam(value="uuid",required=false) String uuid,
 			HttpSession session)  {
 		
-		List<Sign> list=new ArrayList<>();
+		List<String> list=new ArrayList<>();
 		if(openid!=null){
 			 list = signService.openidSign(subscriptionId, openid);			
 		}else{

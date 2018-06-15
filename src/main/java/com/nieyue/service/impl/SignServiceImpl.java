@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +46,8 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 	PrizeService prizeService;
 	@Autowired
 	SignPrizeService signPrizeService;
+	@Value("${myPugin.projectDomainUrl}")
+	String projectDomainUrl;
 	@Override
 	public List<Sign> list(int pageNum, int pageSize, String orderName, String orderWay, Wrapper<Sign> wrapper) {
 				List<Sign> rl = super.list(pageNum, pageSize, orderName, orderWay, wrapper);
@@ -83,7 +86,8 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 	
 	@Transactional(propagation=Propagation.REQUIRED)
 	@Override
-	public List<Sign> accountSign(Long subscriptionId, Long accountId, String uuid) {
+	public List<String> accountSign(Long subscriptionId, Long accountId, String uuid) {
+		List<String> list=new ArrayList<>();
 		//公众号
 		Subscription subscription = subscriptionService.load(subscriptionId);
 		if(subscription==null){
@@ -114,7 +118,6 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 	 	sw.allEq(nswmap);
 		List<Sign> signlist = this.list(1, 1, null, null, sw);
 		boolean b=false;
-		List<Sign> list=new ArrayList<>();
 		//签到连续天数
 		Integer realDayNumber=0;
 		if(signlist.size()<=0){
@@ -127,7 +130,6 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 			s.setSubscriptionId(subscriptionId);
 			s.setAccountId(thirdInfo.getAccountId());
 			b = this.add(s);
-			list.add(s);
 			realDayNumber=1;
 		}else{
 			//记录签到
@@ -154,7 +156,6 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 			s.setSubscriptionId(subscriptionId);
 			s.setAccountId(thirdInfo.getAccountId());
 			b = this.update(s);
-			list.add(s);
 		}
 		if(!b){
 			throw new CommonRollbackException("签到异常，请再次签到");
@@ -208,11 +209,16 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 	}
 	@Transactional(propagation=Propagation.REQUIRED)
 	@Override
-	public List<Sign> openidSign(Long subscriptionId,  String openid) {
+	public List<String> openidSign(Long subscriptionId,  String openid) {
+		List<String> mpstrlist=new ArrayList<>();
+		String mpstr="";
 		//公众号
 		Subscription subscription = subscriptionService.load(subscriptionId);
 		if(subscription==null){
-			throw new CommonRollbackException("公众号不存在");	
+			mpstr="公众号不存在";
+			mpstrlist.add(mpstr);
+			return mpstrlist;
+			//throw new CommonRollbackException("公众号不存在");	
 		}
 		//查询账户的签到
 		Wrapper<Sign> sw=new EntityWrapper<>();
@@ -226,6 +232,8 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 		List<Sign> list=new ArrayList<>();
 		//签到连续天数
 		Integer realDayNumber=0;
+		//签到总积分
+		Double integral=0.0;
 		if(signlist.size()<=0){
 			//签到表不存在，第一次签到
 			Sign s=new Sign();
@@ -238,6 +246,7 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 			b = this.add(s);
 			list.add(s);
 			realDayNumber=1;
+			integral=1.0;
 		}else{
 			//记录签到
 			Sign s = signlist.get(0);
@@ -249,7 +258,10 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 				SignRecord sr = srl.get(0);
 				Long st = DateUtil.getSeparatedTime(new Date(), sr.getSignDate());
 				if(st<1){//同一天
-					throw new CommonRollbackException("今天已经签过到了");
+					//throw new CommonRollbackException("今天已经签过到了")
+					mpstr="今天您已经签到过了，感谢亲的关注";
+					mpstrlist.add(mpstr);
+					return mpstrlist;
 				}else if(st>1){//相隔天数大于1，从新计算连续天数
 					s.setDayNumber(1);
 				}else if(st==1){//相隔天数为1，连续天数+1
@@ -264,9 +276,14 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 			s.setOpenid(openid);
 			b = this.update(s);
 			list.add(s);
+			integral=s.getIntegral();
 		}
+		
 		if(!b){
-			throw new CommonRollbackException("签到异常，请再次签到");
+			mpstr="签到异常，请再次签到";
+			mpstrlist.add(mpstr);
+			return mpstrlist;
+			//throw new CommonRollbackException("签到异常，请再次签到");
 		}
 		SignRecord signRecord=new SignRecord();
 		signRecord.setOpenid(openid);
@@ -276,8 +293,13 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 		b=signRecordService.add(signRecord);
 		//记录
 		if(!b){
-			throw new CommonRollbackException("签到异常，请再次签到");
+			mpstr="签到异常，请再次签到";
+			mpstrlist.add(mpstr);
+			return mpstrlist;
+			//throw new CommonRollbackException("签到异常，请再次签到");
 		}
+		mpstr="签到成功!\n 您已连续签到"+realDayNumber+"次。\n 本次签到，您获得了以下奖励：1积分奖励，您现有总积分:"+integral+",继续签到可获得精美礼品！\n 签到说明：签到送礼为连续签到，若期间忘记者，则会重新开始计算连续签到天数。";
+		
 		//此时计算签到的时间是否有资格获取奖品
 		Wrapper<Prize> pw=new EntityWrapper<>();
 		Map<String,Object> pwmap=new HashMap<String,Object>();
@@ -285,8 +307,8 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 		pw.allEq(MyDom4jUtil.getNoNullMap(pwmap));
 		List<Prize> pl = prizeService.list(1, Integer.MAX_VALUE, null, null, pw);
 		if(pl.size()>0){
-			pl.forEach((e)->{
-				Prize p=pl.get(0);
+			Prize p=pl.get(0);
+			for (Prize e : pl) {
 				if(subscription.getAccountId().equals(e.getAccountId())//创建奖品的账户id
 						&&subscriptionId.equals(e.getSubscriptionId())
 						){
@@ -311,8 +333,11 @@ public class SignServiceImpl extends BaseServiceImpl<Sign,Long> implements SignS
 				sp.setPrizeId(p.getPrizeId());
 				sp.setOpenid(openid);
 				signPrizeService.add(sp);
-			});
+				mpstr+="\n\n >>><a href='"+projectDomainUrl+"/home/sign_prize.html?openid="+openid+"'>点击查看签到礼品</a>";
+			}
 		}
-		return list;
+		mpstrlist.add(mpstr);
+		
+		return mpstrlist;
 	}
 }

@@ -33,9 +33,9 @@ import io.swagger.annotations.ApiOperation;
  * @author yy
  *
  */
-@Api(tags={"TemplateData"},value="模板数据",description="模板数据管理")
+@Api(tags={"templateData"},value="模板数据",description="模板数据管理")
 @RestController
-@RequestMapping("/TemplateData")
+@RequestMapping("/templateData")
 public class TemplateDataController extends BaseController<TemplateData,Long> {
 	@Resource
 	private TemplateDataService TemplateDataService;

@@ -11,12 +11,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.nieyue.bean.KfArticle;
 import com.nieyue.bean.KfMessage;
 import com.nieyue.bean.Subscription;
+import com.nieyue.bean.TemplateData;
+import com.nieyue.bean.TemplateMessage;
 import com.nieyue.exception.CommonRollbackException;
 import com.nieyue.service.SubscriptionService;
 import com.nieyue.weixin.mp.KfSessionHandler;
@@ -42,8 +43,10 @@ import me.chanjar.weixin.mp.bean.kefu.WxMpKefuMessage;
 import me.chanjar.weixin.mp.bean.result.WxMpOAuth2AccessToken;
 import me.chanjar.weixin.mp.bean.result.WxMpUser;
 import me.chanjar.weixin.mp.bean.result.WxMpUserList;
+import me.chanjar.weixin.mp.bean.template.WxMpTemplate;
 import me.chanjar.weixin.mp.bean.template.WxMpTemplateData;
 import me.chanjar.weixin.mp.bean.template.WxMpTemplateMessage;
+import me.chanjar.weixin.mp.bean.template.WxMpTemplateMessage.MiniProgram;
 import me.chanjar.weixin.mp.constant.WxMpEventConstants;
 import net.sf.json.JSONObject;
 
@@ -95,10 +98,10 @@ public class WeiXinMpBusiness {
 			}
 			});
 		}
-	  @Bean
-	  public WxMpMessageRouter router() {
-	    final WxMpMessageRouter newRouter = new WxMpMessageRouter(wxMpService);
-
+	  
+	  public WxMpMessageRouter router(WxMpMessageRouter newRouter) {
+	    //final WxMpMessageRouter newRouter = new WxMpMessageRouter(wxMpService);
+	   
 	    // 记录所有事件的日志 （异步执行）
 	    newRouter.rule().handler(this.logHandler).next();
 
@@ -151,7 +154,7 @@ public class WeiXinMpBusiness {
 	        .event(EventType.SCAN).handler(this.scanHandler).end();
 
 	    // 默认
-	    //newRouter.rule().async(false).handler(this.msgHandler).end();
+	   // newRouter.rule().async(false).handler(this.msgHandler).end();
 
 	    return newRouter;
 	  }
@@ -381,28 +384,79 @@ public class WeiXinMpBusiness {
 		}
 	}
 	/**
-	 * 模板消息
-	 * @param args
+	 * 根据模板消息id,或者名称获取模板消息
+	 * @param templateId 模板消息id
 	 * @throws WxErrorException 
 	 * @throws Exception
 	 */
-	public  void sendTemplateMsg() throws WxErrorException{
+	public  WxMpTemplate getWxMpTemplate(
+			String templateId,
+			String title
+			) throws WxErrorException{
+		WxMpTemplate wxMpTemplate=null;
+		//获取模板列表
+		List<WxMpTemplate> tml = wxMpService.getTemplateMsgService().getAllPrivateTemplate();
+		//获取模板id
+		if(tml.size()>0){
+			for (WxMpTemplate tm : tml) {
+				if(tm.getTemplateId().equals(templateId)){
+					wxMpTemplate=tm;
+					break;
+				}
+			}
+			if(wxMpTemplate==null){
+				for (WxMpTemplate tm : tml) {
+					if(tm.getTitle().equals(title)){
+						wxMpTemplate=tm;
+						break;
+					}
+				}
+			}
+		}
+		return wxMpTemplate;
+	}
+	/**
+	 * 模板消息
+	 * @param openidList 微信openid集合
+	 * @param templateMessage 微信公众号模板消息
+	 * @param templateDataList 模板数据
+	 * @throws WxErrorException 
+	 * @throws Exception
+	 */
+	public  void sendWxMpTemplateMessage(
+			List<String> openidList,
+			TemplateMessage templateMessage,
+			List<TemplateData> templateDataList
+			) throws WxErrorException{
 		//用户列表
-		// wxService.getUserService().userList(openid);
-		//w
 		List<WxMpTemplateData> tl=new ArrayList<>();
-		WxMpTemplateData wt=new WxMpTemplateData("a","sdfs地方<a href='http://www.baidu.com'>百度</a>水电费","red");
-		WxMpTemplateData wt2=new WxMpTemplateData("b","sdfs地方2<a href='http://www.baidu.com'>百度2</a>水电费2","#000");
-		tl.add(wt);
-		tl.add(wt2);
-		wxMpService.getTemplateMsgService().sendTemplateMsg(
-				WxMpTemplateMessage.builder()
-				//.toUser(openid)
-				//.templateId("AXnL71biQYCba631H12ObXNOqCAzntwpZ2267INBgEQ")
-				.templateId("SYrrEd3tdozrH1jfHAHUl_ordoEwUZcCeIpnFKneBW4")
-				.url("http://www.baidu.com")
-				.data(tl)
-				.build());
+		if(templateDataList.size()>0){
+			templateDataList.forEach((td)->{
+				WxMpTemplateData wt=new WxMpTemplateData
+						(td.getName(),td.getValue(),td.getColor());
+				tl.add(wt);
+			});
+		}
+		openidList.forEach((openid)->{
+		try {
+			WxMpTemplateMessage b = WxMpTemplateMessage.builder()
+			.toUser(openid)
+			.url(templateMessage.getUrl())
+			.templateId(templateMessage.getTeamplateId())
+			.data(tl)
+			.build();
+				
+			//如果有小程序
+			if(!StringUtils.isEmpty(templateMessage.getAppid())
+					&&StringUtils.isEmpty(templateMessage.getPagepath())){
+				MiniProgram mini=new MiniProgram(templateMessage.getAppid(), templateMessage.getPagepath());
+				b.setMiniProgram(mini);
+			}
+			wxMpService.getTemplateMsgService().sendTemplateMsg(b);
+		} catch (WxErrorException e1) {
+			
+		}
+		});
 	}
 	public static void main(String[] args) throws Exception {
 		String appid="wxc2526a4f29d74dc4";
@@ -412,12 +466,25 @@ public class WeiXinMpBusiness {
 		String aesKey="aes";
 		String accessToken="10_BwHl2v2ZvCEZQC-N5SkxS1bYN9ZOvYpio5cgFHG2V2dTgaunYi7EfJVKVWaDYCExTJ0TUcgG_nOhbxIONLU7vrIddGN9f37CRjSz6hSOfS3rvSwFU-avXpDjuyrzeDfgpzbMyvlC8kNhL9rrUDLbAAALUC";
 		WeiXinMpBusiness weXinMpBusiness=new WeiXinMpBusiness();
+		//weXinMpBusiness.init(appid,secret, token, aesKey);
+		//weXinMpBusiness.sendWxMpKefuMessage2();
+		//模板
+		List<String> openidList=new ArrayList<>();
+		openidList.add("oKs_907lCS6pb2tMNjzooOICN2_o");
+		TemplateMessage templateMessage=new TemplateMessage();
+		templateMessage.setTeamplateId("SYrrEd3tdozrH1jfHAHUl_ordoEwUZcCeIpnFKneBW4");
+		templateMessage.setUrl("http://www.baidu.com");
+		List<TemplateData> templateDataList=new ArrayList<>();
+		TemplateData templateData=new TemplateData();
+		templateData.setName("a");
+		templateData.setValue("sdfs地方<a href='http://www.baidu.com'>百度</a>水电费");
+		templateData.setColor("red");
+		templateDataList.add(templateData);
 		weXinMpBusiness.init(appid,secret, token, aesKey);
-		weXinMpBusiness.sendWxMpKefuMessage2();
-		weXinMpBusiness.init(appid,secret, token, aesKey);
-		weXinMpBusiness.sendWxMpKefuMessage2();
+		weXinMpBusiness.sendWxMpTemplateMessage(openidList, templateMessage,templateDataList );
 		//WeXinMpBusiness.initJsApi("http://www.baidu.com");
-		weXinMpBusiness.initJsApi("http://www.baidu.com");
+		//weXinMpBusiness.initJsApi("http://www.baidu.com");
+		
 	}
 
 }

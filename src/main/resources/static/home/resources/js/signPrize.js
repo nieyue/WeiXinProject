@@ -158,7 +158,6 @@ new Vue({
     },
     //显示收货地址
     showReceiptInfo:function(){
-    	console.log(111)
     	var _this=this;
     	this.updateReceiptInfoModel = true
     	 axios( {
@@ -211,7 +210,7 @@ new Vue({
    		    	_this.updateReceiptInfo=res.data.data[0];	
    		    }else{
    		    	console.log(res.data.msg)
-   		    	_this.$Message.error('提交失败');
+   		    	_this.$Message.error(res.data.msg);
    		    }
    		 _this.updateReceiptInfoModel = false
    		    
