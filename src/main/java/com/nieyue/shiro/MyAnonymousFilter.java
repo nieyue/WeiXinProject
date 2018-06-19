@@ -31,6 +31,9 @@ public class MyAnonymousFilter extends AnonymousFilter {
 			}
 			return false;
 		}
+		/*if(request.getRequestURI().indexOf(".txt")>-1){
+			return true;
+		}*/
 		return super.onPreHandle(request, response, mappedValue);
 	}
 }

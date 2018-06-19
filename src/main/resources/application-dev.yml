@@ -39,10 +39,10 @@ myPugin:
     myDomainName: null
   projectName: WeiXinProject
   #projectDomainUrl: http://localhost:8080
-  projectDomainUrl: http://nieyue.free.ngrok.cc
+  projectDomainUrl: http://nieyue.ngrok.xiaomiqiu.cn
   shiro: 
     anon: 
-      locations: / , /swagger-resources/** , /swagger-ui.html , /webjars/** , /v2/** , /home/** ,/uploaderPath/** , /resources/** , /tool/** 
+      locations: / ,/*.txt , /swagger-resources/** , /swagger-ui.html , /webjars/** , /v2/** , /home/** ,/uploaderPath/** , /resources/** , /tool/** 
   alibaba: 
     alipay:
       APP_ID: 2018011501882345 

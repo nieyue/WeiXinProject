@@ -47,6 +47,7 @@ public class MenuHandler extends AbstractHandler {
     //String msg="\n>>><a href='"+projectDomainUrl+"/home/sign_prize.html?openid="+wxMessage.getFromUser()+"'>点击查看签到礼品</a>";
     //点击事件,签到
     if(EventType.CLICK.equals(wxMessage.getEvent())){
+    	//if(EventType.CLICK.equals(wxMessage.getEvent())){
     	if(wxMessage.getEventKey().equals("签到有礼")){
     		//System.err.println("签到有礼");
     		//System.err.println("appid="+wxMpService.getWxMpConfigStorage().getAppId());

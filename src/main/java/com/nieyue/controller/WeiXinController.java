@@ -30,6 +30,7 @@ import me.chanjar.weixin.mp.api.WxMpMessageRouter;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.menu.WxMpGetSelfMenuInfoResult;
 import me.chanjar.weixin.mp.bean.menu.WxMpMenu;
+import me.chanjar.weixin.mp.bean.menu.WxMpSelfMenuInfo.WxMpSelfMenuButton;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlOutMessage;
 /**
@@ -153,8 +154,38 @@ public class WeiXinController extends BaseController<Object,Long>{
 			  @RequestParam(value="appid") String appid
 			  ) throws WxErrorException {
 		  WxMpService wxMpService=subscriptionBusiness.getWxMpService(appid);
-		    WxMpMenu oldMenu = wxMpService.getMenuService().menuGet();
-		    List<WxMenuButton> buttons = oldMenu.getMenu().getButtons();
+		    //WxMpMenu oldMenu = wxMpService.getMenuService().menuGet();
+		   // List<WxMenuButton> buttons = oldMenu.getMenu().getButtons();
+		    WxMpGetSelfMenuInfoResult osmi = wxMpService.getMenuService().getSelfMenuInfo();
+		    List<WxMpSelfMenuButton> buttons2 = osmi.getSelfMenuInfo().getButtons();
+		    
+		  List<WxMenuButton> buttons = new ArrayList<>();
+		  for (int i = 0; i < buttons2.size(); i++) {
+			  WxMenuButton button = new WxMenuButton();
+			  WxMpSelfMenuButton button2 = buttons2.get(i);
+			  button.setAppId(appid);
+			 // button.setKey(button2.getKey());
+			 // button.setName(button2.getName());
+			  //button.setType(button2.getType());
+			  //button.setUrl(button2.getUrl());
+			  org.springframework.beans.BeanUtils.copyProperties(button2, button);
+			  List<WxMenuButton> ll=new ArrayList<>();
+			  for (int j = 0; j <button2.getSubButtons().getSubButtons().size(); j++) {
+				  WxMenuButton subbutton = new WxMenuButton();
+				  WxMpSelfMenuButton subbutton2 = button2.getSubButtons().getSubButtons().get(j);
+				 // subbutton.setAppId(appid);
+				 // subbutton.setKey(subbutton2.getKey());
+				  //subbutton.setName(subbutton2.getName());
+				  //subbutton.setType(subbutton2.getType());
+				 // subbutton.setUrl(subbutton2.getUrl());
+				  subbutton.setMediaId(subbutton2.getValue());
+				  org.springframework.beans.BeanUtils.copyProperties(subbutton2, subbutton);
+				  ll.add(subbutton);
+			}
+			  button.setSubButtons(ll);
+			  buttons.add(button);
+			  
+		}
 		    boolean haveButton=false;//是否已经有了
 		    //循环当前的所有按钮找到签到按钮
 		   loop: for (int i = 0; i < buttons.size(); i++) {
@@ -199,6 +230,54 @@ public class WeiXinController extends BaseController<Object,Long>{
 		    list.add(wxMpService.getMenuService().menuCreate(menu));
 		    srl.setData(list);
 		    return srl;
+		 /*   WxMpGetSelfMenuInfoResult osmi = wxMpService.getMenuService().getSelfMenuInfo();
+		    List<WxMpSelfMenuButton> buttons = osmi.getSelfMenuInfo().getButtons();
+		    boolean haveButton=false;//是否已经有了
+		    //循环当前的所有按钮找到签到按钮
+		   loop: for (int i = 0; i < buttons.size(); i++) {
+			   WxMpSelfMenuButton button = buttons.get(i);
+		    	if(button.getSubButtons().getSubButtons().size()>0){
+		    		for (int j = 0; j < button.getSubButtons().getSubButtons().size(); j++) {
+		    			WxMpSelfMenuButton subButton = button.getSubButtons().getSubButtons().get(j);
+		    			if(subButton.getName().equals("签到有礼")){
+		    				subButton.setType("click");
+		    				subButton.setKey("签到有礼");
+		    				haveButton=true;
+		    				break loop;
+		    			}
+		    		}
+		    	}else{
+		    		if(button.getName().equals("签到有礼")){
+	    				button.setType("click");
+	    				button.setKey("签到有礼");
+	    				haveButton=true;
+	    				break loop;
+	    			}
+		    	}
+			}
+		    WxMenu menu = new WxMenu();
+		    //不存在，新建一个
+		    if(!haveButton){
+		    	WxMpSelfMenuButton subButton = new WxMpSelfMenuButton();
+		    	subButton.setName("签到有礼");
+		    	subButton.setType("click");
+		    	subButton.setKey("签到有礼");
+		    	WxMpSelfMenuButton lastbutton = buttons.get(buttons.size()-1);
+		    	lastbutton.getSubButtons().getSubButtons().add(subButton);
+		    	//放在最后一个
+		    	buttons.get(buttons.size()-1).setSubButtons(lastbutton.getSubButtons());
+		    }
+		    //放入
+		    List<WxMenuButton> lll=new ArrayList<>();
+		    org.springframework.beans.BeanUtils.copyProperties(buttons, lll);
+		    menu.setButtons(lll);
+		    StateResultList<List<String>> srl=new  StateResultList<>();
+		    srl.setCode(200);
+		    srl.setMsg("成功");
+		    List<String> list=new ArrayList<>();
+		    list.add(wxMpService.getMenuService().menuCreate(menu));
+		    srl.setData(list);
+		    return srl;*/
 	  }
 
 

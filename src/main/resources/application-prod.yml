@@ -38,7 +38,7 @@ myPugin:
   projectDomainUrl: http://ccsd.boya1.cn
   shiro: 
     anon:
-      locations: / , /swagger-resources/** , /swagger-ui.html , /webjars/** , /v2/** , /home/** , /resources/** ,/uploaderPath/**
+      locations: / , /*.txt  , /swagger-resources/** , /swagger-ui.html , /webjars/** , /v2/** , /home/** , /resources/** ,/uploaderPath/**
   alibaba: 
     alipay:
       APP_ID: 2018011501882345 
