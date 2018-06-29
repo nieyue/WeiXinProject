@@ -10,6 +10,8 @@ import java.util.Set;
 
 import javax.servlet.http.HttpSession;
 
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -447,6 +449,9 @@ public class AccountController extends BaseController<Account, Long>{
 			@RequestParam("accountId") Long accountId,
 			HttpSession session)  {
 		session.invalidate();
+		//shiro登录退出
+		Subject currentUser = SecurityUtils.getSubject();
+        currentUser.logout();
 		return ResultUtil.getSlefSRSuccessList(null);
 	}
 	
