@@ -12,7 +12,6 @@ server:
     accept-count: 1000
     max-connections: 1000
  # connection-timeout: 60
- 
 spring:
   datasource: 
     name: master
@@ -30,8 +29,11 @@ spring:
       min-idle: 100
       max-idle: 300
       max-active: 800 
-    
 myPugin: 
+  jmx:
+    rmi:
+      hostname: 127.0.0.1
+      port: 1234  
   uploaderPath:
     rootPath: D:/nieyue
     locationPath: /uploaderPath/img 

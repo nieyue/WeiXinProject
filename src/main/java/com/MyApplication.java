@@ -12,6 +12,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.remoting.rmi.RmiRegistryFactoryBean;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 import com.nieyue.service.PermissionService;
@@ -78,7 +79,6 @@ public class MyApplication extends WebMvcConfigurerAdapter  implements Applicati
 	public void onApplicationEvent(ApplicationReadyEvent event) {
 		//初始化权限列表
 		permissionService.initPermission();
-		
 		
 	}
 	}

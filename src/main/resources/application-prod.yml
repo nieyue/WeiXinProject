@@ -28,7 +28,11 @@ spring:
       min-idle: 100
       max-idle: 300
       max-active: 800
-myPugin: 
+myPugin:
+  jmx:
+    rmi:
+      hostname: 118.190.133.146
+      port: 1234 
   uploaderPath:  
     rootPath: /home
     locationPath: /uploaderPath/img
