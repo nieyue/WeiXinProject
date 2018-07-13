@@ -53,6 +53,7 @@ public class AccountBusiness {
     public List<Map<String,Object>> accountSession(
     		Account account
     		){
+    	
     	Session session=SecurityUtils.getSubject().getSession();
     	List<Map<String,Object>> list = new ArrayList<>();
 	        //将用户信息放入session中

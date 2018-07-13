@@ -277,6 +277,8 @@ public class AccountController extends BaseController<Account, Long>{
 			throw new AccountIsExistException();//账户已经存在
 		}
 		account.setPassword(MyDESutil.getMD5(account.getPassword()));
+		account.setCreateDate(new Date());
+		account.setLoginDate(new Date());
 		StateResultList<List<Account>> a = super.add(account);
 		return a;
 	}
