@@ -14,9 +14,15 @@ public interface ScheduleJobService extends BaseService<ScheduleJob, Long>{
 	/** 装载定时任务 */	
 	public ScheduleJob loadScheduleJob(Long scheduleJobId);	
 	/** 定时任务总共数目 */	
-	public int countAll();	
+	public int countAll(
+			Long jobId,
+			Integer type
+			);	
 	/** 分页定时任务信息 */
-	public List<ScheduleJob> browsePagingScheduleJob(int pageNum,int pageSize,String orderName,String orderWay) ;		
+	public List<ScheduleJob> browsePagingScheduleJob(
+			Long jobId,
+			Integer type,
+			int pageNum,int pageSize,String orderName,String orderWay) ;		
 
 
 }

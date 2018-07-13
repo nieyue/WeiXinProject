@@ -91,7 +91,7 @@ public class MyApplication extends WebMvcConfigurerAdapter  implements Applicati
 		//初始化权限列表
 		permissionService.initPermission();
 		//初始化任务计划	
-		 List<ScheduleJob> l = scheduleJobService.browsePagingScheduleJob(1,Integer.MAX_VALUE,"schedule_job_id","asc");
+		 List<ScheduleJob> l = scheduleJobService.browsePagingScheduleJob(null,null,1,Integer.MAX_VALUE,"schedule_job_id","asc");
 		 l.forEach(sj -> {
 			 quartzEventService.addScheduleJob(sj); 
 		 });

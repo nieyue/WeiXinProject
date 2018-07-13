@@ -62,19 +62,26 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJob,Long> im
 		return sj;
 	}
 	@Override
-	public int countAll() {
-		int c = scheduleJobDao.countAll();
+	public int countAll(Long jobId,
+			Integer type) {
+		int c = scheduleJobDao.countAll(jobId, type);
 		return c;
 	}
 	@Override
-	public List<ScheduleJob> browsePagingScheduleJob(int pageNum, int pageSize, String orderName, String orderWay) {
+	public List<ScheduleJob> browsePagingScheduleJob(
+			Long jobId,
+			Integer type,
+			int pageNum, int pageSize, String orderName, String orderWay) {
 		if(pageNum<1){
 			pageNum=1;
 		}
 		if(pageSize<1){
 			pageSize=0;//没有数据
 		}
-		List<ScheduleJob> l = scheduleJobDao.browsePagingScheduleJob(pageNum-1, pageSize, orderName, orderWay);
+		List<ScheduleJob> l = scheduleJobDao.browsePagingScheduleJob(
+				 jobId,
+				 type,
+				pageNum-1, pageSize, orderName, orderWay);
 		return l;
 	}
 

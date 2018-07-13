@@ -120,8 +120,8 @@ public class ScheduleJobController extends BaseController<ScheduleJob, Long>{
 	 */
 	@ApiOperation(value = "工作计划数量", notes = "工作计划数量查询")
 	@ApiImplicitParams({
-		  @ApiImplicitParam(name="pageNum",value="页头数位",dataType="int", paramType = "query",defaultValue="1"),
-		  @ApiImplicitParam(name="pageSize",value="每页数目",dataType="int", paramType = "query",defaultValue="10"),
+		  @ApiImplicitParam(name="jobId",value="业务id",dataType="long", paramType = "query"),
+		  @ApiImplicitParam(name="type",value="类型，1客服消息，2模板消息",dataType="int", paramType = "query"),
 		  })
 	@RequestMapping(value={"/count"})
 	public StateResultList<List<Integer>> countAll(
@@ -131,7 +131,7 @@ public class ScheduleJobController extends BaseController<ScheduleJob, Long>{
 			HttpServletResponse response
 			) throws SchedulerException{
 		List<Integer> l=new ArrayList<Integer>();
-		int f = scheduleJobService.countAll();
+		int f = scheduleJobService.countAll(jobId,type);
 		l.add(f);
 		return ResultUtil.getSlefSRSuccessList(l);
 		
@@ -143,6 +143,8 @@ public class ScheduleJobController extends BaseController<ScheduleJob, Long>{
 	 */
 	@ApiOperation(value = "工作计划列表", notes = "工作计划分页浏览")
 	@ApiImplicitParams({
+		@ApiImplicitParam(name="jobId",value="业务id",dataType="long", paramType = "query"),
+		  @ApiImplicitParam(name="type",value="类型，1客服消息，2模板消息",dataType="int", paramType = "query"),
 	  @ApiImplicitParam(name="pageNum",value="页头数位",dataType="int", paramType = "query",defaultValue="1"),
 	  @ApiImplicitParam(name="pageSize",value="每页数目",dataType="int", paramType = "query",defaultValue="10"),
 	  @ApiImplicitParam(name="orderName",value="排序字段",dataType="string", paramType = "query",defaultValue="updateDate"),
@@ -150,13 +152,15 @@ public class ScheduleJobController extends BaseController<ScheduleJob, Long>{
 	  })
 	@RequestMapping(value={"/list"})
 	public StateResultList<List<ScheduleJob>> browseScheduleJobList(
+			@RequestParam(value="jobId",required=false)Long jobId,
+			@RequestParam(value="type",required=false)Integer type,
 			@RequestParam(value="pageNum",defaultValue="1",required=false)int pageNum,
 			@RequestParam(value="pageSize",defaultValue="10",required=false) int pageSize,
 			@RequestParam(value="orderName",required=false,defaultValue="schedule_job_id") String orderName,
 			@RequestParam(value="orderWay",required=false,defaultValue="asc") String orderWay
 			){
 		List<ScheduleJob> l=new ArrayList<ScheduleJob>();
-		 l = scheduleJobService.browsePagingScheduleJob(pageNum, pageSize, orderName, orderWay);
+		 l = scheduleJobService.browsePagingScheduleJob(jobId,type,pageNum, pageSize, orderName, orderWay);
 		return  ResultUtil.getSlefSRSuccessList(l); 
 		
 	}
@@ -193,7 +197,7 @@ public class ScheduleJobController extends BaseController<ScheduleJob, Long>{
 			HttpServletResponse response
 			) throws SchedulerException{
 		if(scheduleJobId==null||scheduleJobId.equals("")){
-			List<ScheduleJob> l = scheduleJobService.browsePagingScheduleJob(1, Integer.MAX_VALUE, "schedule_job_id", "asc");
+			List<ScheduleJob> l = scheduleJobService.browsePagingScheduleJob(null,null,1, Integer.MAX_VALUE, "schedule_job_id", "asc");
 			l.forEach((sj)->{
 				sj.setJobStatus(jobStatus);
 				scheduleJobService.updateScheduleJob(sj);	

@@ -89,7 +89,14 @@ WHERE schedule_job_id=#{scheduleJobId}
    		 type,
    		 update_date
 	FROM schedule_job_tb
-	WHERE ${orderName}  
+	<where>
+	<if test="jobId!=null">
+		AND job_id=jobId
+	</if>
+	<if test="type!=null">
+		AND type=type
+	</if>
+	AND ${orderName}  
 	<if test="orderWay=='asc'">
 	<![CDATA[>=]]> 
 	</if>
@@ -97,10 +104,19 @@ WHERE schedule_job_id=#{scheduleJobId}
 	  <![CDATA[<= ]]>
 	</if>
 	(SELECT ${orderName} FROM schedule_job_tb 
+	<where>
+	<if test="jobId!=null">
+		AND job_id=jobId
+	</if>
+	<if test="type!=null">
+		AND type=type
+	</if>
+	</where>
 		ORDER BY 
 			${orderName}  ${orderWay}
 		LIMIT #{pageNum}, 1
 		) 
+	</where>
 	ORDER BY
 		${orderName}  ${orderWay}
 	LIMIT
@@ -112,6 +128,14 @@ WHERE schedule_job_id=#{scheduleJobId}
 	SELECT
 	 	count(schedule_job_id)
 	FROM schedule_job_tb
+	<where>
+	<if test="jobId!=null">
+		AND job_id=jobId
+	</if>
+	<if test="type!=null">
+		AND type=type
+	</if>
+	</where>
 </select>   
    
  
