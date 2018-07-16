@@ -91,10 +91,10 @@ WHERE schedule_job_id=#{scheduleJobId}
 	FROM schedule_job_tb
 	<where>
 	<if test="jobId!=null">
-		AND job_id=jobId
+		AND job_id=#{jobId}
 	</if>
 	<if test="type!=null">
-		AND type=type
+		AND type=#{type}
 	</if>
 	AND ${orderName}  
 	<if test="orderWay=='asc'">
@@ -106,10 +106,10 @@ WHERE schedule_job_id=#{scheduleJobId}
 	(SELECT ${orderName} FROM schedule_job_tb 
 	<where>
 	<if test="jobId!=null">
-		AND job_id=jobId
+		AND job_id=#{jobId}
 	</if>
 	<if test="type!=null">
-		AND type=type
+		AND type=#{type}
 	</if>
 	</where>
 		ORDER BY 
@@ -130,10 +130,10 @@ WHERE schedule_job_id=#{scheduleJobId}
 	FROM schedule_job_tb
 	<where>
 	<if test="jobId!=null">
-		AND job_id=jobId
+		AND job_id=#{jobId}
 	</if>
 	<if test="type!=null">
-		AND type=type
+		AND type=#{type}
 	</if>
 	</where>
 </select>   
