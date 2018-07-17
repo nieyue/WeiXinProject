@@ -4,13 +4,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.BoundValueOperations;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,6 +22,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.baomidou.mybatisplus.toolkit.StringUtils;
 import com.nieyue.util.DateUtil;
 import com.nieyue.util.FileUploadUtil;
 import com.nieyue.util.ThumbnailatorUtils;
@@ -133,6 +138,30 @@ public class ToolController extends BaseController<Object,Long>{
 		this.logger.warn("\ngetId：\n{} ",session.getId());
 		//this.logger.error("\ngetId：\n{} ",session.getId());
 		return session.getId();
+		
+	}
+	@Autowired
+	StringRedisTemplate stringRedisTemplate;
+	/**
+	 * test
+	 * @return
+	 * @throws InterruptedException 
+	 */
+	@ApiOperation(value = "test", notes = "test")
+	@RequestMapping(value = "/test", method = {RequestMethod.GET,RequestMethod.POST})
+	public String test(
+			HttpSession	 session
+			) throws InterruptedException{
+		BoundValueOperations<String, String> srt = stringRedisTemplate.boundValueOps("test");
+		Boolean r = srt.setIfAbsent("aaa11");
+        if(r){
+        	System.out.println("success:"+srt.get());
+        }else{
+        	//srt.set("123456",1,TimeUnit.SECONDS);
+        	System.out.println("fail"+srt.get());
+        	//Thread.sleep(3000);
+        }
+		return srt.get();
 		
 	}
 }
