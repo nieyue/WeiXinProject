@@ -25,7 +25,7 @@ spring:
     port: 6379
     database: 1
     timeout: 3000
-    pool:
+    pool: 
       min-idle: 100
       max-idle: 300
       max-active: 800 
@@ -57,6 +57,8 @@ myPugin:
       SECRET: 99cfd6e70e1333472989dd9f45fca83c
       MCH_ID: 1489128222
       API: abb763888198076d2a4ab3a10cf0cee3
+    mp: 
+      sendFrequency: 0.1
   qiniu:
     accessKey: dGJBFJKfsq-c74QCzTSxLAzPgcDw338-__AKWM8n
     secretKey: yTswXYndF5kVG7LrGb4mX6YqaitNDdjNIpxXIDyk

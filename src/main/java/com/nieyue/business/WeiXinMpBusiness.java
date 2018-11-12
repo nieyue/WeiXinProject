@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.annotation.PostConstruct;
 
@@ -11,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 import com.nieyue.bean.KfArticle;
@@ -57,6 +60,9 @@ import net.sf.json.JSONObject;
  */
 @Configuration
 public class WeiXinMpBusiness {
+	//发送频率
+	@Value("${myPugin.weixin.mp.sendFrequency}")
+	Double sendFrequency;
 	//存放多个WxMpService
 	Map<String,WxMpService> mapWxMpService=new HashMap<>();
 	WxMpService wxMpService;
@@ -329,39 +335,51 @@ public class WeiXinMpBusiness {
 				list.add(wx);
 			});
 		}
-		openidList.forEach((e)->{
-			 WxMpKefuMessage message;
-			if(kfMessage.getMsgtype().equals("text")){
-				message = WxMpKefuMessage.TEXT().toUser(e).content(kfMessage.getContent()).build();
-			}else if(kfMessage.getMsgtype().equals("image")){
-				message = WxMpKefuMessage.IMAGE().toUser(e).mediaId(kfMessage.getMediaId()).build();
-			}else if(kfMessage.getMsgtype().equals("voice")){
-				message = WxMpKefuMessage.VOICE().toUser(e).mediaId(kfMessage.getMediaId()).build();
-			}else if(kfMessage.getMsgtype().equals("video")){
-				message = WxMpKefuMessage.VIDEO().toUser(e).mediaId(kfMessage.getMediaId()).thumbMediaId(kfMessage.getThumbMediaId()).title(kfMessage.getTitle()).description(kfMessage.getDescription()).build();
-			}else if(kfMessage.getMsgtype().equals("music")){
-				message = WxMpKefuMessage.MUSIC().toUser(e).thumbMediaId(kfMessage.getThumbMediaId()).title(kfMessage.getTitle()).description(kfMessage.getDescription()).musicUrl(kfMessage.getMusicurl()).hqMusicUrl(kfMessage.getHqmusicurl()).build();
-			}else if(kfMessage.getMsgtype().equals("news")){
-				message = WxMpKefuMessage.NEWS().toUser(e).articles(list).toUser(e).build();
-			}else if(kfMessage.getMsgtype().equals("mpnews")){
-				message = WxMpKefuMessage.MPNEWS().toUser(e).mediaId(kfMessage.getMediaId()).build();
-			}else if(kfMessage.getMsgtype().equals("wxcard")){
-				message = WxMpKefuMessage.WXCARD().toUser(e).cardId(kfMessage.getCardId()).build();
-			}else{
-				throw new CommonRollbackException("没有此客服类型");
-			}
-			/*//小程序暂无
-			else if(kfMessage.getMsgtype().equals("miniprogrampage")){
-			}*/
-				try {
-					wxMpService.getKefuService().sendKefuMessage(message);
-				} catch (WxErrorException e1) {
-					if(JSONObject.fromObject(e1.getMessage()).get("errcode").equals(45015)){
-						//throw new CommonRollbackException("该用户不活跃");
-						System.out.println("该用户不活跃");
+		//异步执行
+		ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
+    	singleThreadExecutor.execute(new Runnable() {
+			@Override
+			public void run() {
+				openidList.forEach((e)->{
+					 WxMpKefuMessage message;
+					if(kfMessage.getMsgtype().equals("text")){
+						message = WxMpKefuMessage.TEXT().toUser(e).content(kfMessage.getContent()).build();
+					}else if(kfMessage.getMsgtype().equals("image")){
+						message = WxMpKefuMessage.IMAGE().toUser(e).mediaId(kfMessage.getMediaId()).build();
+					}else if(kfMessage.getMsgtype().equals("voice")){
+						message = WxMpKefuMessage.VOICE().toUser(e).mediaId(kfMessage.getMediaId()).build();
+					}else if(kfMessage.getMsgtype().equals("video")){
+						message = WxMpKefuMessage.VIDEO().toUser(e).mediaId(kfMessage.getMediaId()).thumbMediaId(kfMessage.getThumbMediaId()).title(kfMessage.getTitle()).description(kfMessage.getDescription()).build();
+					}else if(kfMessage.getMsgtype().equals("music")){
+						message = WxMpKefuMessage.MUSIC().toUser(e).thumbMediaId(kfMessage.getThumbMediaId()).title(kfMessage.getTitle()).description(kfMessage.getDescription()).musicUrl(kfMessage.getMusicurl()).hqMusicUrl(kfMessage.getHqmusicurl()).build();
+					}else if(kfMessage.getMsgtype().equals("news")){
+						message = WxMpKefuMessage.NEWS().toUser(e).articles(list).toUser(e).build();
+					}else if(kfMessage.getMsgtype().equals("mpnews")){
+						message = WxMpKefuMessage.MPNEWS().toUser(e).mediaId(kfMessage.getMediaId()).build();
+					}else if(kfMessage.getMsgtype().equals("wxcard")){
+						message = WxMpKefuMessage.WXCARD().toUser(e).cardId(kfMessage.getCardId()).build();
+					}else{
+						throw new CommonRollbackException("没有此客服类型");
 					}
-				}
+					/*//小程序暂无
+					else if(kfMessage.getMsgtype().equals("miniprogrampage")){
+					}*/
+						try {
+							wxMpService.getKefuService().sendKefuMessage(message);
+							//发送频率
+							Thread.sleep((long)(sendFrequency*1000));
+						} catch (WxErrorException | InterruptedException e1) {
+							if(JSONObject.fromObject(e1.getMessage()).get("errcode").equals(45015)){
+								//throw new CommonRollbackException("该用户不活跃");
+								System.out.println("该用户不活跃");
+							}
+						}
+				});
+				
+				singleThreadExecutor.shutdown();
+			}
 		});
+		
 	}
 	/**
 	 * 客服消息
@@ -437,25 +455,37 @@ public class WeiXinMpBusiness {
 				tl.add(wt);
 			});
 		}
-		openidList.forEach((openid)->{
-		try {
-			WxMpTemplateMessage b = WxMpTemplateMessage.builder()
-			.toUser(openid)
-			.url(templateMessage.getUrl())
-			.templateId(templateMessage.getTeamplateId())
-			.data(tl)
-			.build();
+		
+		//异步执行
+		ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
+    	singleThreadExecutor.execute(new Runnable() {
+			@Override
+			public void run() {
+				openidList.forEach((openid)->{
+				try {
+					WxMpTemplateMessage b = WxMpTemplateMessage.builder()
+					.toUser(openid)
+					.url(templateMessage.getUrl())
+					.templateId(templateMessage.getTeamplateId())
+					.data(tl)
+					.build();
+						
+					//如果有小程序
+					if(!StringUtils.isEmpty(templateMessage.getAppid())
+							&&StringUtils.isEmpty(templateMessage.getPagepath())){
+						MiniProgram mini=new MiniProgram(templateMessage.getAppid(), templateMessage.getPagepath());
+						b.setMiniProgram(mini);
+					}
+					wxMpService.getTemplateMsgService().sendTemplateMsg(b);
+					//发送频率
+					Thread.sleep((long)(sendFrequency*1000));
+				} catch (WxErrorException | InterruptedException e1) {
+					
+				}
 				
-			//如果有小程序
-			if(!StringUtils.isEmpty(templateMessage.getAppid())
-					&&StringUtils.isEmpty(templateMessage.getPagepath())){
-				MiniProgram mini=new MiniProgram(templateMessage.getAppid(), templateMessage.getPagepath());
-				b.setMiniProgram(mini);
+				});
+				singleThreadExecutor.shutdown();
 			}
-			wxMpService.getTemplateMsgService().sendTemplateMsg(b);
-		} catch (WxErrorException e1) {
-			
-		}
 		});
 	}
 	public static void main(String[] args) throws Exception {

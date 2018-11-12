@@ -118,17 +118,17 @@ public class TemplateMessageController extends BaseController<TemplateMessage,Lo
 	@ApiOperation(value = "模板消息增加", notes = "模板消息增加")
 	@RequestMapping(value = "/add", method = {RequestMethod.GET,RequestMethod.POST})
 	public @ResponseBody StateResultList<List<TemplateMessage>> add(@ModelAttribute TemplateMessage templateMessage, HttpSession session) {
+		Subscription subscription = subscriptionService.load(templateMessage.getSubscriptionId());
+		if(subscription==null){
+			throw new CommonRollbackException("公众号不存在");
+		}
+		if(StringUtils.isEmpty(subscription.getAppid())
+				||StringUtils.isEmpty(subscription.getAppid())
+				){
+			throw new CommonRollbackException("公众号缺少appid或者appsecret");
+		}
 		//获取模板消息
 		try {
-			Subscription subscription = subscriptionService.load(templateMessage.getSubscriptionId());
-			if(subscription==null){
-				throw new CommonRollbackException("公众号不存在");
-			}
-			if(StringUtils.isEmpty(subscription.getAppid())
-					||StringUtils.isEmpty(subscription.getAppid())
-					){
-				throw new CommonRollbackException("公众号缺少appid或者appsecret");
-			}
 			//初始化公众号
 			weiXinMpBusiness.init(subscription.getAppid(), subscription.getAppsecret(), subscription.getToken(), "aes");
 			WxMpTemplate wxMpTemplate = weiXinMpBusiness.getWxMpTemplate(templateMessage.getTeamplateId(),templateMessage.getTitle());
@@ -140,7 +140,7 @@ public class TemplateMessageController extends BaseController<TemplateMessage,Lo
 			StateResultList<List<TemplateMessage>> a = super.add(templateMessage);
 			return a;
 		} catch (WxErrorException e) {
-			throw new CommonRollbackException("模板消息配置不正确");
+			throw new CommonRollbackException(e.getMessage());
 		}
 	}
 	/**

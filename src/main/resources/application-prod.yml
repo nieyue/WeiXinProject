@@ -10,7 +10,7 @@ server:
     min-spare-threads: 200
     accept-count: 1000
     max-connections: 1000
- # connection-timeout: 60 
+    #connection-timeout: 60 
 spring:
   datasource: 
     name: master
@@ -55,6 +55,8 @@ myPugin:
       SECRET: 99cfd6e70e1333472989dd9f45fca83c
       MCH_ID: 1489128222
       API: abb763888198076d2a4ab3a10cf0cee3
+    mp: 
+      sendFrequency: 0.1
   qiniu: 
     accessKey: dGJBFJKfsq-c74QCzTSxLAzPgcDw338-__AKWM8n
     secretKey: yTswXYndF5kVG7LrGb4mX6YqaitNDdjNIpxXIDyk
