@@ -13,5 +13,5 @@ public interface TemplateMessageService extends BaseService<TemplateMessage, Lon
 	/**
 	 * 群发模板消息
 	 */
-	public List<TemplateMessage> sendTemplateMessage(Long templateMessageId);
+	public List<TemplateMessage> sendTemplateMessage(Long templateMessageId,String openid);
 }

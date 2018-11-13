@@ -1,5 +1,6 @@
 package com.nieyue;
 
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -47,9 +48,9 @@ public class AppTest
 		list.add(a+"2");
 		list.add(a+"3");
 		list.forEach(e->{
-			System.out.println(e);
+			System.out.println(new Date().getTime()+e);
 				try {
-					Thread.sleep(1000);
+					Thread.sleep((long)(0.1*1000));
 				} catch (InterruptedException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -58,7 +59,7 @@ public class AppTest
 		});
     }
     public static void main (String[] args) {
-    	System.out.println(111);
+    	/*System.out.println(111);
     	ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
     	//ExecutorService singleThreadExecutor = Executors.newFixedThreadPool(5);
     	singleThreadExecutor.execute(new Runnable() {
@@ -75,7 +76,8 @@ public class AppTest
 				//singleThreadExecutor.shutdown();
 			}
 		});
-    	System.out.println(222);
+    	System.out.println(222);*/
+    	aaa("a");
     	
 	}
 }

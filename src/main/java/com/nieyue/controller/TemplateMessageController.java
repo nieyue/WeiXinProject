@@ -194,11 +194,35 @@ public class TemplateMessageController extends BaseController<TemplateMessage,Lo
 	 */
 	@ApiOperation(value = "模板消息群发", notes = "模板消息群发")
 	@ApiImplicitParams({
-		@ApiImplicitParam(name="templateMessageId",value="客服消息ID",dataType="long", paramType = "query",required=true)
+		@ApiImplicitParam(name="templateMessageId",value="客服消息ID",dataType="long", paramType = "query",required=true),
 	})
 	@RequestMapping(value = "/sendTemplateMessage", method = {RequestMethod.GET,RequestMethod.POST})
-	public  StateResultList<List<TemplateMessage>> sendKfMessage(@RequestParam("templateMessageId") Long templateMessageId,HttpSession session)  {
-		List<TemplateMessage> list = templateMessageService.sendTemplateMessage(templateMessageId);
+	public  StateResultList<List<TemplateMessage>> sendTemplateMessage(
+			@RequestParam("templateMessageId") Long templateMessageId,
+			HttpSession session)  {
+		
+		List<TemplateMessage> list = templateMessageService.sendTemplateMessage(templateMessageId,null);
+		if(list.size()>0){
+			return ResultUtil.getSlefSRSuccessList(list);
+		}
+		return ResultUtil.getSlefSRFailList(list);
+	}
+	/**
+	 * 模板个人消息发送
+	 * @return
+	 */
+	@ApiOperation(value = "模板个人消息发送", notes = "模板个人消息发送")
+	@ApiImplicitParams({
+		@ApiImplicitParam(name="templateMessageId",value="客服消息ID",dataType="long", paramType = "query",required=true),
+	})
+	@RequestMapping(value = "/sendSingleTemplateMessage", method = {RequestMethod.GET,RequestMethod.POST})
+	public  StateResultList<List<TemplateMessage>> sendSingleTemplateMessage(
+			@RequestParam("templateMessageId") Long templateMessageId,
+			HttpSession session)  {
+		if(session.getAttribute("openid")==null){
+			return ResultUtil.getSlefSRFailList(null);
+		}
+		List<TemplateMessage> list = templateMessageService.sendTemplateMessage(templateMessageId,(String)session.getAttribute("openid"));
 		if(list.size()>0){
 			return ResultUtil.getSlefSRSuccessList(list);
 		}

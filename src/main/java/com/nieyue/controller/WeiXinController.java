@@ -1,8 +1,10 @@
 package com.nieyue.controller;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
@@ -14,15 +16,24 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.view.RedirectView;
 
+import com.nieyue.bean.Subscription;
+import com.nieyue.bean.TemplateMessage;
 import com.nieyue.business.SubscriptionBusiness;
 import com.nieyue.business.WeiXinMpBusiness;
 import com.nieyue.exception.CommonRollbackException;
+import com.nieyue.service.SubscriptionService;
+import com.nieyue.service.TemplateMessageService;
 import com.nieyue.util.StateResultList;
 
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import me.chanjar.weixin.common.bean.WxJsapiSignature;
 import me.chanjar.weixin.common.bean.menu.WxMenu;
 import me.chanjar.weixin.common.bean.menu.WxMenuButton;
 import me.chanjar.weixin.common.exception.WxErrorException;
@@ -33,6 +44,7 @@ import me.chanjar.weixin.mp.bean.menu.WxMpMenu;
 import me.chanjar.weixin.mp.bean.menu.WxMpSelfMenuInfo.WxMpSelfMenuButton;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlOutMessage;
+import me.chanjar.weixin.mp.bean.result.WxMpUser;
 /**
  * 微信公众号类
  * @author yy
@@ -46,6 +58,10 @@ public class WeiXinController extends BaseController<Object,Long>{
 	SubscriptionBusiness subscriptionBusiness;
 	@Autowired
 	WeiXinMpBusiness weiXinMpBusiness;
+	@Autowired
+	TemplateMessageService templateMessageService;
+	@Autowired
+	SubscriptionService subscriptionService;
 	/**
 	 * 微信门户
 	 * @return
@@ -359,4 +375,80 @@ public class WeiXinController extends BaseController<Object,Long>{
 		  WxMpService wxMpService=subscriptionBusiness.getWxMpService(appid);
 	    return wxMpService.getMenuService().getSelfMenuInfo();
 	  }
+	  
+	  /**
+		 * 微信js授权访问
+		 *
+		 * @return 重定向跳转
+	 * @throws WxErrorException 
+		 */
+		@ApiOperation(value = "微信js授权访问", notes = "微信js授权访问")
+		@ApiImplicitParams({
+			@ApiImplicitParam(name="templateMessageId",value="客服消息ID",dataType="long", paramType = "query",required=true),
+		})
+		@RequestMapping(value="/authorize",method={RequestMethod.GET,RequestMethod.POST})
+		public  RedirectView authorize(
+				@RequestParam("templateMessageId") Long templateMessageId,
+				HttpServletRequest request) throws WxErrorException{
+			StringBuffer url = request.getRequestURL();
+			String baseurl = url.delete(url.length() - request.getRequestURI().length(), url.length()).toString();
+			String state = request.getHeader("Referer");
+			TemplateMessage templateMessage = templateMessageService.load(templateMessageId);
+			if(templateMessage==null){
+				throw new CommonRollbackException("模板消息不存在");
+			}
+			Subscription subscription = subscriptionService.load(templateMessage.getSubscriptionId());
+			if(subscription==null){
+				throw new CommonRollbackException("公众号不存在");
+			}
+			if(StringUtils.isEmpty(subscription.getAppid())
+					||StringUtils.isEmpty(subscription.getAppid())
+					){
+				throw new CommonRollbackException("公众号缺少appid或者appsecret");
+			}
+			//初始化公众号
+			weiXinMpBusiness.init(subscription.getAppid(), subscription.getAppsecret(), subscription.getToken(), "aes");
+			return new RedirectView(weiXinMpBusiness.authorize(baseurl+"/weixin/openid",2,state));
+
+		}
+		/**
+		 * 此链接为  微信js授权访问 跳转后 微信链接跳回的链接
+		 * 微信登录获取openid
+		 *
+		 * @return 重定向跳转
+		 */
+		@ApiOperation(value = "微信登录获取openid", notes = "微信登录获取openid")
+		@ApiImplicitParams({
+				@ApiImplicitParam(name="code",value="授权码",dataType="string", paramType = "query"),
+				@ApiImplicitParam(name="state",value="请求网页原地址",dataType="string", paramType = "query"),
+		})
+		@RequestMapping(value="/openid",method={RequestMethod.GET,RequestMethod.POST})
+		public  RedirectView openid(
+				@RequestParam("code")String code,
+				@RequestParam("state")String state,
+				HttpSession session) throws IOException, WxErrorException {
+			//如果存在session则返回
+			if(session.getAttribute("openid")!=null){
+				return new RedirectView(state);
+			}
+			WxMpUser wxMpUser = weiXinMpBusiness.redirectUrl(code);
+			session.setAttribute("openid",wxMpUser.getOpenId());
+			return new RedirectView(state);
+		}
+		/**
+		 * 微信jssdk 接口
+		 *
+		 * @return
+		 */
+		@ApiOperation(value = "微信jssdk 接口", notes = "微信jssdk 接口")
+		@ApiImplicitParams({
+				@ApiImplicitParam(name="url",value="请求网页原地址",dataType="string", paramType = "query"),
+		})
+		@RequestMapping(value="/js/connection",method={RequestMethod.GET,RequestMethod.POST})
+		public @ResponseBody WxJsapiSignature connectionWeiXin(@RequestParam("url")String url, HttpSession session)
+				throws WxErrorException {
+			WxJsapiSignature wxJsapiSignature = weiXinMpBusiness.initJsApi(url);
+			return wxJsapiSignature;
+
+		}
 }

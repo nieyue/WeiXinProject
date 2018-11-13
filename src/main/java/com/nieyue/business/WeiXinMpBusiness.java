@@ -37,6 +37,7 @@ import me.chanjar.weixin.common.api.WxConsts;
 import me.chanjar.weixin.common.api.WxConsts.EventType;
 import me.chanjar.weixin.common.api.WxConsts.MenuButtonType;
 import me.chanjar.weixin.common.api.WxConsts.XmlMsgType;
+import me.chanjar.weixin.common.bean.WxJsapiSignature;
 import me.chanjar.weixin.common.exception.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpInMemoryConfigStorage;
 import me.chanjar.weixin.mp.api.WxMpMessageRouter;
@@ -164,37 +165,58 @@ public class WeiXinMpBusiness {
 
 	    return newRouter;
 	  }
-	/**
-	 * 初始化网页
-	 * @throws WxErrorException 
-	 */
-	public  WxMpUser initJsApi(
-			String redirectUrl
+	  /**
+	     * 微信js授权访问
+	     * @param  url 微信登录获取openid 的服务路径
+	     * @param  type oauth2网页授权的scope.
+	     *              1不弹出授权页面，直接跳转，只能获取用户openid.
+	     *              2弹出授权页面，可通过openid拿到昵称、性别、所在地。并且，即使在未关注的情况下，只要用户授权，也能获取其信息.
+	     *              3手动授权,可获取成员的详细信息,包含手机、邮箱。只适用于企业微信或企业号.
+	     * @param  state 请求网页原地址
+	     * @throws WxErrorException
+	     */
+	public  String authorize(
+			String url,
+            Integer type,
+            String state
 			){
-		 wxMpService = new WxMpServiceImpl();
-		//String url = WxMpService.CONNECT_OAUTH2_AUTHORIZE_URL;
-		String code = wxMpService.oauth2buildAuthorizationUrl(redirectUrl, WxConsts.OAuth2Scope.SNSAPI_BASE, null);
-		WxMpUser wxMpUser=redirectUrl(code);
-		return wxMpUser;
+		//初始化公众号
+		 String snapi=WxConsts.OAuth2Scope.SNSAPI_BASE;
+	        switch (type){
+	            case 1:
+	                snapi=WxConsts.OAuth2Scope.SNSAPI_BASE;
+	                break;
+	            case 2:
+	                snapi=WxConsts.OAuth2Scope.SNSAPI_USERINFO;
+	                break;
+	        }
+	        String redirectUrl = wxMpService.oauth2buildAuthorizationUrl(url, snapi, state);
+	        return redirectUrl;
 	}
-	/**
-	 * 获取openid
-	 * @throws WxErrorException 
-	 */
-	public  WxMpUser redirectUrl(
-			String code
-			){
-		WxMpUser wxMpUser=null;
-		try {
-			WxMpOAuth2AccessToken wxMpOAuth2AccessToken = wxMpService.oauth2getAccessToken(code);
-			wxMpUser = wxMpService.oauth2getUserInfo(wxMpOAuth2AccessToken, null);
-			System.err.println(wxMpUser.getOpenId());
-		} catch (WxErrorException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return wxMpUser;
-	}
+	 /**
+     * 获取openid
+     * @param  code 授权码
+     * @throws WxErrorException
+     */
+    public  WxMpUser redirectUrl(
+            String code
+    ) throws WxErrorException {
+        WxMpOAuth2AccessToken wxMpOAuth2AccessToken = wxMpService.oauth2getAccessToken(code);
+        WxMpUser wxMpUser = wxMpService.oauth2getUserInfo(wxMpOAuth2AccessToken, null);
+        return wxMpUser;
+    }
+    /**
+     * 微信jssdk 接口
+     * @param  url 请求网页原地址
+     * @throws WxErrorException
+     */
+    public WxJsapiSignature initJsApi(
+            String url
+
+    ) throws WxErrorException {
+        WxJsapiSignature wxJsapiSignature = wxMpService.createJsapiSignature(url);
+        return wxJsapiSignature;
+    }
 	/**
 	 * 初始化增加
 	 * @param appid 公众号appid
@@ -446,7 +468,7 @@ public class WeiXinMpBusiness {
 			TemplateMessage templateMessage,
 			List<TemplateData> templateDataList
 			) throws WxErrorException{
-		//用户列表
+		//模板数据
 		List<WxMpTemplateData> tl=new ArrayList<>();
 		if(templateDataList.size()>0){
 			templateDataList.forEach((td)->{
@@ -489,8 +511,11 @@ public class WeiXinMpBusiness {
 		});
 	}
 	public static void main(String[] args) throws Exception {
-		String appid="wxc2526a4f29d74dc4";
-		String secret="326c00a8da2764bce31d334302ed510e";
+		//String appid="wxc2526a4f29d74dc4";
+		//String secret="326c00a8da2764bce31d334302ed510e";
+		//一品小说吧
+		String appid="wx2d077165bf7e27f4";
+		String secret="41c2f60d63b7b358ee0d733a2e539161";
 		String token="nieyue";
 		//String aesKey="raw";
 		String aesKey="aes";

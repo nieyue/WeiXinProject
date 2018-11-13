@@ -25,10 +25,13 @@ import org.springframework.web.multipart.MultipartFile;
 import com.baomidou.mybatisplus.toolkit.StringUtils;
 import com.nieyue.util.DateUtil;
 import com.nieyue.util.FileUploadUtil;
+import com.nieyue.util.MyQRcode;
 import com.nieyue.util.ThumbnailatorUtils;
 import com.nieyue.verification.VerificationCode;
 
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 
 
@@ -62,6 +65,25 @@ public class ToolController extends BaseController<Object,Long>{
 			HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception{
 			ByteArrayOutputStream vc = verificationCode.execute(session);
 			response.getOutputStream().write(vc.toByteArray());
+		return ;
+	}
+	/**
+	 * 生成二维码
+	 * @param date
+	 * @return
+	 * @throws Exception 
+	 */
+	@ApiOperation(value = "生成二维码", notes = "生成二维码")
+	@RequestMapping(value = "/getQrCode", method = {RequestMethod.GET,RequestMethod.POST})
+	@ApiImplicitParams({
+		@ApiImplicitParam(name="url",value="url链接",dataType="string", paramType = "query"),
+	})
+	public void getQrCode(
+			@RequestParam("url") String url,
+			HttpSession session,
+			HttpServletRequest request,
+			HttpServletResponse response) throws Exception{
+		MyQRcode.createQrcode(url, response.getOutputStream());
 		return ;
 	}
 	/**

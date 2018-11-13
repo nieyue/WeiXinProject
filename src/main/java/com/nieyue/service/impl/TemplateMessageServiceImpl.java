@@ -32,7 +32,7 @@ public class TemplateMessageServiceImpl extends BaseServiceImpl<TemplateMessage,
 	@Autowired
 	TemplateDataService templateDataService;
 	@Override
-	public List<TemplateMessage> sendTemplateMessage(Long templateMessageId) {
+	public List<TemplateMessage> sendTemplateMessage(Long templateMessageId,String openid) {
 		List<TemplateMessage> list=new ArrayList<>();
 		TemplateMessage templateMessage = this.load(templateMessageId);
 		if(templateMessage==null){
@@ -50,8 +50,13 @@ public class TemplateMessageServiceImpl extends BaseServiceImpl<TemplateMessage,
 		try {
 			//初始化公众号
 			weiXinMpBusiness.init(subscription.getAppid(), subscription.getAppsecret(), subscription.getToken(), "aes");
-			//获取所有账户			
-			List<String> openidList=weiXinMpBusiness.getOpenidList();
+			//获取所有账户		
+			List<String> openidList = new ArrayList<String>();
+			if(StringUtils.isEmpty(openid)){
+				openidList=weiXinMpBusiness.getOpenidList();
+			}else{
+				openidList.add(openid);
+			}
 			//模板消息数据
 			List<TemplateData> templateDataList = null;
 			Wrapper<TemplateData> wrapper=new EntityWrapper<>();
